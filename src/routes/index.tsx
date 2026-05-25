@@ -73,6 +73,7 @@ const CHARACTERS: Record<CharKey, {
 };
 
 type Step = "idle" | "generating" | "preview" | "paid";
+type PaidBumps = { oracoes: boolean; guia: boolean };
 
 function Index() {
   const [character, setCharacter] = useState<CharKey>("jair");
@@ -81,7 +82,8 @@ function Index() {
   const [originalPreview, setOriginalPreview] = useState<string | null>(null);
   const [showPayment, setShowPayment] = useState(false);
   const [showUpsell, setShowUpsell] = useState(false);
-  const [bumps, setBumps] = useState<{ oracoes: boolean; guia: boolean }>({
+  const [paidBumps, setPaidBumps] = useState<PaidBumps>({ oracoes: false, guia: false });
+  const [bumps, setBumps] = useState<PaidBumps>({
     oracoes: false,
     guia: false,
   });
@@ -151,9 +153,10 @@ function Index() {
 
   const simulatePayment = () => {
     setShowPayment(false);
+    setPaidBumps(bumps);
     setStep("paid");
     setTimeout(() => setShowUpsell(true), 600);
-    toast.success("Pagamento aprovado! Sua foto foi liberada.");
+    toast.success("Pagamento aprovado! Seus itens foram liberados.");
   };
 
   return (
