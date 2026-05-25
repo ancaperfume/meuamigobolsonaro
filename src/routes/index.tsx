@@ -300,7 +300,7 @@ function Index() {
           {[
             { n: "01", t: "Envie sua selfie", d: "Uma foto sua, bem iluminada e olhando pra câmera." },
             { n: "02", t: "Nossa IA monta a cena", d: `Em menos de 30 segundos, ${c.short} aparece do seu lado.` },
-            { n: "03", t: "Libere e compartilhe", d: "Pagamento simbólico de R$ 6,22 e a foto é sua, sem marca d'água." },
+            { n: "03", t: "Libere e compartilhe", d: "Liberação imediata e sua foto fica sua, sem marca d'água." },
           ].map((s) => (
             <div key={s.n} className="bg-card border border-border rounded-2xl p-6">
               <div className="font-display text-3xl text-[oklch(0.52_0.16_145)] mb-3">{s.n}</div>
