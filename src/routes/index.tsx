@@ -73,6 +73,7 @@ const CHARACTERS: Record<CharKey, {
 };
 
 type Step = "idle" | "generating" | "preview" | "paid";
+type PaidBumps = { oracoes: boolean; guia: boolean };
 
 function Index() {
   const [character, setCharacter] = useState<CharKey>("jair");
@@ -81,7 +82,8 @@ function Index() {
   const [originalPreview, setOriginalPreview] = useState<string | null>(null);
   const [showPayment, setShowPayment] = useState(false);
   const [showUpsell, setShowUpsell] = useState(false);
-  const [bumps, setBumps] = useState<{ oracoes: boolean; guia: boolean }>({
+  const [paidBumps, setPaidBumps] = useState<PaidBumps>({ oracoes: false, guia: false });
+  const [bumps, setBumps] = useState<PaidBumps>({
     oracoes: false,
     guia: false,
   });
@@ -147,13 +149,15 @@ function Index() {
     setShowPayment(false);
     setShowUpsell(false);
     setBumps({ oracoes: false, guia: false });
+    setPaidBumps({ oracoes: false, guia: false });
   };
 
   const simulatePayment = () => {
     setShowPayment(false);
+    setPaidBumps(bumps);
     setStep("paid");
     setTimeout(() => setShowUpsell(true), 600);
-    toast.success("Pagamento aprovado! Sua foto foi liberada.");
+    toast.success("Pagamento aprovado! Seus itens foram liberados.");
   };
 
   return (
@@ -287,6 +291,33 @@ function Index() {
                   >
                     <Check className="w-5 h-5" /> Baixar foto em alta resolução
                   </a>
+                  {(paidBumps.oracoes || paidBumps.guia) && (
+                    <div className="rounded-xl border border-border bg-card p-4 space-y-2">
+                      <div className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
+                        Seus bônus liberados
+                      </div>
+                      {paidBumps.oracoes && (
+                        <a
+                          href="/downloads/250-oracoes-secretas.pdf"
+                          download
+                          className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-muted hover:bg-[oklch(0.88_0.19_95)]/40 transition text-sm font-medium"
+                        >
+                          <span>📖 250+ Orações Secretas (PDF)</span>
+                          <span className="text-[oklch(0.52_0.16_145)]">Baixar</span>
+                        </a>
+                      )}
+                      {paidBumps.guia && (
+                        <a
+                          href="/downloads/guia-filho-de-direita.pdf"
+                          download
+                          className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-muted hover:bg-[oklch(0.88_0.19_95)]/40 transition text-sm font-medium"
+                        >
+                          <span>🛡️ Guia Filho de Direita (PDF)</span>
+                          <span className="text-[oklch(0.52_0.16_145)]">Baixar</span>
+                        </a>
+                      )}
+                    </div>
+                  )}
                   <button onClick={reset} className="w-full text-sm text-muted-foreground hover:text-foreground py-2">
                     Fazer outra foto
                   </button>
