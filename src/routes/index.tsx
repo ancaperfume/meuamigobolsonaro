@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { generatePhoto } from "@/lib/photo.functions";
 import { toast } from "sonner";
@@ -87,6 +87,16 @@ function Index() {
   });
   const fileRef = useRef<HTMLInputElement>(null);
   const callGenerate = useServerFn(generatePhoto);
+
+  // Preload all character examples to make switching instant
+  useEffect(() => {
+    Object.values(CHARACTERS).forEach((ch) => {
+      const img = new Image();
+      img.decoding = "async";
+      img.src = ch.example;
+    });
+  }, []);
+
 
   const c = CHARACTERS[character];
 
@@ -184,11 +194,11 @@ function Index() {
               {c.headline}
             </h1>
             <p className="text-lg text-muted-foreground mb-8 max-w-md">
-              {c.sub} Por apenas <span className="font-semibold text-foreground">R$ 6,22</span>, você leva sua memória para casa.
+              {c.sub}
             </p>
 
             <div className="flex flex-wrap items-center gap-4 text-sm">
-              <Stat n="98%" label="aprovaram" />
+              <Stat n="100%" label="aprovaram" />
               <Divider />
               <Stat n="< 30s" label="pra ficar pronta" />
               <Divider />
@@ -207,11 +217,13 @@ function Index() {
                     className="w-full h-full object-cover"
                     width={1024}
                     height={1024}
+                    loading="eager"
+                    decoding="async"
+                    fetchPriority="high"
                   />
                   <div className="absolute top-3 left-3 bg-background/90 backdrop-blur px-3 py-1 rounded-full text-[11px] uppercase tracking-wider font-bold">
                     Exemplo
                   </div>
-                  <div className="watermark-overlay" />
                 </>
               )}
 
@@ -259,7 +271,7 @@ function Index() {
                     className="w-full bg-[oklch(0.52_0.16_145)] hover:bg-[oklch(0.45_0.16_145)] text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition shadow-lg shadow-[oklch(0.52_0.16_145)]/30"
                   >
                     <Lock className="w-5 h-5" />
-                    Liberar minha foto por R$ 6,22
+                    Liberar minha foto
                   </button>
                   <button onClick={reset} className="w-full text-sm text-muted-foreground hover:text-foreground py-2">
                     Tentar outra foto
@@ -301,7 +313,7 @@ function Index() {
           {[
             { n: "01", t: "Envie sua selfie", d: "Uma foto sua, bem iluminada e olhando pra câmera." },
             { n: "02", t: "Nossa IA monta a cena", d: `Em menos de 30 segundos, ${c.short} aparece do seu lado.` },
-            { n: "03", t: "Libere e compartilhe", d: "Pagamento simbólico de R$ 6,22 e a foto é sua, sem marca d'água." },
+            { n: "03", t: "Libere e compartilhe", d: "Liberação imediata e sua foto fica sua, sem marca d'água." },
           ].map((s) => (
             <div key={s.n} className="bg-card border border-border rounded-2xl p-6">
               <div className="font-display text-3xl text-[oklch(0.52_0.16_145)] mb-3">{s.n}</div>
