@@ -149,6 +149,7 @@ function Index() {
     setShowPayment(false);
     setShowUpsell(false);
     setBumps({ oracoes: false, guia: false });
+    setPaidBumps({ oracoes: false, guia: false });
   };
 
   const simulatePayment = () => {
