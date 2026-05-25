@@ -217,6 +217,9 @@ function Index() {
                     className="w-full h-full object-cover"
                     width={1024}
                     height={1024}
+                    loading="eager"
+                    decoding="async"
+                    fetchPriority="high"
                   />
                   <div className="absolute top-3 left-3 bg-background/90 backdrop-blur px-3 py-1 rounded-full text-[11px] uppercase tracking-wider font-bold">
                     Exemplo
