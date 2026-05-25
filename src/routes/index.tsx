@@ -88,6 +88,16 @@ function Index() {
   const fileRef = useRef<HTMLInputElement>(null);
   const callGenerate = useServerFn(generatePhoto);
 
+  // Preload all character examples to make switching instant
+  useEffect(() => {
+    Object.values(CHARACTERS).forEach((ch) => {
+      const img = new Image();
+      img.decoding = "async";
+      img.src = ch.example;
+    });
+  }, []);
+
+
   const c = CHARACTERS[character];
 
   const total = useMemo(() => {
