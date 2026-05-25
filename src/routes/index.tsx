@@ -184,11 +184,11 @@ function Index() {
               {c.headline}
             </h1>
             <p className="text-lg text-muted-foreground mb-8 max-w-md">
-              {c.sub} Por apenas <span className="font-semibold text-foreground">R$ 6,22</span>, você leva sua memória para casa.
+              {c.sub}
             </p>
 
             <div className="flex flex-wrap items-center gap-4 text-sm">
-              <Stat n="98%" label="aprovaram" />
+              <Stat n="100%" label="aprovaram" />
               <Divider />
               <Stat n="< 30s" label="pra ficar pronta" />
               <Divider />

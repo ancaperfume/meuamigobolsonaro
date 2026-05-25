@@ -99,7 +99,7 @@
   background-repeat: repeat;
   background-size: 360px 160px;
   mix-blend-mode: multiply;
-  opacity: 0.45;
+  opacity: 0.72;
 }
 
 .font-display { font-family: var(--font-display); }
