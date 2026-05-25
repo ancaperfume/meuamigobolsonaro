@@ -211,7 +211,6 @@ function Index() {
                   <div className="absolute top-3 left-3 bg-background/90 backdrop-blur px-3 py-1 rounded-full text-[11px] uppercase tracking-wider font-bold">
                     Exemplo
                   </div>
-                  <div className="watermark-overlay" />
                 </>
               )}
 
@@ -259,7 +258,7 @@ function Index() {
                     className="w-full bg-[oklch(0.52_0.16_145)] hover:bg-[oklch(0.45_0.16_145)] text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition shadow-lg shadow-[oklch(0.52_0.16_145)]/30"
                   >
                     <Lock className="w-5 h-5" />
-                    Liberar minha foto por R$ 6,22
+                    Liberar minha foto
                   </button>
                   <button onClick={reset} className="w-full text-sm text-muted-foreground hover:text-foreground py-2">
                     Tentar outra foto
