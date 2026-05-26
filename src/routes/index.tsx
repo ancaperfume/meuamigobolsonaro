@@ -201,7 +201,7 @@ function Index() {
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-6 pb-20">
+      <main className="max-w-6xl mx-auto px-6 pb-32 md:pb-20">
         {/* CHARACTER SWITCHER — discreet but visible */}
         <CharacterSwitcher value={character} onChange={(k) => { setCharacter(k); reset(); }} />
 
@@ -380,6 +380,55 @@ function Index() {
           <div>Site não oficial, sem vínculo com nenhuma pessoa pública. Imagens geradas por IA com fins de entretenimento.</div>
         </footer>
       </main>
+
+      {/* STICKY BOTTOM MOBILE CTA */}
+      {step !== "generating" && (
+        <div className="fixed bottom-0 left-0 right-0 z-40 p-4 bg-background/95 backdrop-blur-md border-t border-border md:hidden flex items-center justify-between gap-3 shadow-[0_-8px_30px_rgb(0,0,0,0.08)]">
+          {step === "idle" && (
+            <button
+              onClick={() => fileRef.current?.click()}
+              className="w-full bg-[oklch(0.52_0.16_145)] hover:bg-[oklch(0.45_0.16_145)] text-white font-bold py-4 rounded-xl flex items-center justify-center gap-3 transition shadow-lg shadow-[oklch(0.52_0.16_145)]/20"
+            >
+              <Upload className="w-5 h-5 animate-bounce" />
+              Enviar minha foto agora
+            </button>
+          )}
+          {step === "preview" && (
+            <div className="w-full flex gap-2">
+              <button
+                onClick={() => setShowPayment(true)}
+                className="flex-1 bg-[oklch(0.52_0.16_145)] hover:bg-[oklch(0.45_0.16_145)] text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition shadow-lg shadow-[oklch(0.52_0.16_145)]/20"
+              >
+                <Lock className="w-5 h-5" />
+                Liberar minha foto
+              </button>
+              <button
+                onClick={reset}
+                className="px-4 bg-muted hover:bg-muted/80 text-muted-foreground font-semibold rounded-xl flex items-center justify-center"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+          )}
+          {step === "paid" && (
+            <div className="w-full flex gap-2">
+              <a
+                href={generatedUrl!}
+                download={`bolsonaro-meu-amigo-${character}.png`}
+                className="flex-1 bg-[oklch(0.52_0.16_145)] hover:bg-[oklch(0.45_0.16_145)] text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition text-center"
+              >
+                <Check className="w-5 h-5" /> Baixar foto
+              </a>
+              <button
+                onClick={reset}
+                className="px-4 bg-muted hover:bg-muted/80 text-muted-foreground font-semibold rounded-xl flex items-center justify-center"
+              >
+                Nova
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       {showPayment && (
         <PaymentModal
