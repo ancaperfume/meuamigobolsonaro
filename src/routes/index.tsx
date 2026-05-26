@@ -378,6 +378,7 @@ function Index() {
       {showPayment && (
         <PaymentModal
           character={c.name}
+          characterKey={character}
           bumps={bumps}
           setBumps={setBumps}
           total={total}
