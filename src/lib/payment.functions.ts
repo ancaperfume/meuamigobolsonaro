@@ -57,10 +57,11 @@ export const createPixCharge = createServerFn({ method: "POST" })
 
     const json: any = await resp.json();
 
-    // The API may return fields under different names or nested under 'data' / 'pix' — be highly defensive.
-    const nestedData = json.data ?? json.pix ?? json;
+    // The API returns fields nested under 'transaction' or other wrappers like 'data' / 'pix' — be highly defensive.
+    const nestedData = json.transaction ?? json.data ?? json.pix ?? json;
     
     const qrCode: string =
+      nestedData.pix_copia_cola ??
       nestedData.qr_code ?? 
       nestedData.qrcode ?? 
       nestedData.brcode ?? 
@@ -73,9 +74,9 @@ export const createPixCharge = createServerFn({ method: "POST" })
       "";
       
     const qrCodeImage: string =
+      nestedData.qr_code_base64 ??
       nestedData.qr_code_image ?? 
       nestedData.qrcode_image ?? 
-      nestedData.qr_code_base64 ?? 
       nestedData.image ?? 
       nestedData.pixQrCode ?? 
       nestedData.base64 ?? 
