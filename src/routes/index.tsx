@@ -46,7 +46,7 @@ const CHARACTERS: Record<CharKey, {
     short: "Jair",
     tagline: "O Mito",
     headline: "Tire uma foto com o Mito.",
-    sub: "Envie uma selfie sua e em segundos você aparece lado a lado com o Capitão.",
+    sub: "Envie uma selfie sua e em segundos você aparece lado a lado ao Capitão.",
     example: exampleJair,
     accent: "verde-amarelo",
   },
