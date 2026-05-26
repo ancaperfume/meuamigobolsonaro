@@ -14,7 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      orders: {
+        Row: {
+          amount: number
+          bumps: Json
+          character: string
+          created_at: string
+          external_id: string
+          generated_url: string | null
+          id: string
+          nexuspag_id: string | null
+          paid_at: string | null
+          status: string
+        }
+        Insert: {
+          amount: number
+          bumps?: Json
+          character: string
+          created_at?: string
+          external_id: string
+          generated_url?: string | null
+          id?: string
+          nexuspag_id?: string | null
+          paid_at?: string | null
+          status?: string
+        }
+        Update: {
+          amount?: number
+          bumps?: Json
+          character?: string
+          created_at?: string
+          external_id?: string
+          generated_url?: string | null
+          id?: string
+          nexuspag_id?: string | null
+          paid_at?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
