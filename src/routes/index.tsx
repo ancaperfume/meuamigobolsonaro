@@ -415,10 +415,11 @@ function Index() {
                         onClick={async () => {
                           try {
                             await navigator.clipboard.writeText(shareText);
-                            toast.success("Legenda copiada! Abra o Instagram e cole na sua postagem.");
-                          } catch {
-                            toast.error("Não foi possível copiar a legenda.");
+                            toast.success("Legenda copiada com sucesso!");
+                          } catch (e) {
+                            // ignore
                           }
+                          window.open("https://www.instagram.com", "_blank");
                         }}
                         className="bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] hover:brightness-110 text-white font-bold py-2.5 px-2 rounded-xl flex flex-col items-center justify-center gap-1 text-[10px] shadow-md shadow-[#ee2a7b]/20 transition cursor-pointer"
                       >
