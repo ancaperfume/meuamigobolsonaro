@@ -65,7 +65,7 @@ SCENE COMPOSITION & STYLE:
       console.error("AI gateway error", resp.status, txt);
       if (resp.status === 429) throw new Error("Muitas requisições. Tente novamente em alguns instantes.");
       if (resp.status === 402) throw new Error("Créditos de IA esgotados.");
-      throw new Error("Falha ao gerar a foto.");
+      throw new Error(`Falha na API do Google (Status ${resp.status}): ${txt}`);
     }
 
     const json = await resp.json();
