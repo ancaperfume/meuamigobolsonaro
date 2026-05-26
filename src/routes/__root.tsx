@@ -76,14 +76,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
+      { title: "Meu Amigo Bolsonaro" },
+      { name: "description", content: "Create AI-generated photos with Brazilian political figures." },
       { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { property: "og:title", content: "Meu Amigo Bolsonaro" },
+      { property: "og:description", content: "Create AI-generated photos with Brazilian political figures." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "Meu Amigo Bolsonaro" },
+      { name: "twitter:description", content: "Create AI-generated photos with Brazilian political figures." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/dd6b2bed-4234-4864-9e8d-81396c893276/id-preview-ad4563a5--14abfb64-7c25-4b6e-b573-5a86b49933f1.lovable.app-1779814464564.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/dd6b2bed-4234-4864-9e8d-81396c893276/id-preview-ad4563a5--14abfb64-7c25-4b6e-b573-5a86b49933f1.lovable.app-1779814464564.png" },
     ],
     links: [
       {
