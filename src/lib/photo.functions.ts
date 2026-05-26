@@ -17,8 +17,8 @@ const characterPrompts: Record<string, string> = {
 export const generatePhoto = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => inputSchema.parse(data))
   .handler(async ({ data }) => {
-    const apiKey = process.env.LOVABLE_API_KEY;
-    if (!apiKey) throw new Error("LOVABLE_API_KEY missing");
+    const apiKey = process.env.GEMINI_API_KEY || "AIzaSyD6k_z2lFpsS-KyEvLLx8f7qktiVp9yulc";
+    if (!apiKey) throw new Error("GEMINI_API_KEY missing");
 
     const character = characterPrompts[data.character];
     const prompt = `CRITICAL IDENTITY PRESERVATION RULES:
@@ -36,7 +36,7 @@ SCENE COMPOSITION & STYLE:
 - The background should be a cozy, realistic setting (such as a modern Brazilian home living room, a veranda, or an outdoor garden).
 - Output a single realistic, coherent, and highly convincing photo.`;
 
-    const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const resp = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
