@@ -205,6 +205,31 @@ function Index() {
     }
   }, [bumps, total]);
 
+  const shareText = useMemo(() => {
+    return `Olha que incrível a foto realista que eu criei lado a lado com o meu amigo ${CHARACTERS[character].name}! 🇧🇷 Faça a sua também em segundos no site: ${typeof window !== "undefined" ? window.location.origin : "https://meuamigobolsonaro.com.br"}`;
+  }, [character]);
+
+  const handleShareNative = useCallback(async () => {
+    if (typeof window !== "undefined" && navigator.share) {
+      try {
+        await navigator.share({
+          title: "Meu Amigo Bolsonaro",
+          text: shareText,
+          url: window.location.origin,
+        });
+      } catch (e) {
+        // ignore cancellation
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(shareText);
+        toast.success("Legenda e link copiados! Agora é só colar nas suas redes sociais.");
+      } catch {
+        toast.error("Não foi possível copiar automaticamente.");
+      }
+    }
+  }, [shareText]);
+
   return (
     <div className="min-h-screen bg-background bg-parchment">
       <Toaster richColors position="top-center" />
@@ -342,7 +367,7 @@ function Index() {
                 </div>
               )}
               {step === "paid" && (
-                <div className="space-y-3">
+                <div className="space-y-5">
                   <a
                     href={generatedUrl!}
                     download={`bolsonaro-meu-amigo-${character}.png`}
@@ -350,6 +375,66 @@ function Index() {
                   >
                     <Check className="w-5 h-5" /> Baixar foto em alta resolução
                   </a>
+                  
+                  {/* COMPARTILHAMENTO NAS REDES SOCIAIS */}
+                  <div className="bg-card border-2 border-dashed border-[oklch(0.52_0.16_145)]/40 rounded-2xl p-4.5 space-y-3">
+                    <div className="text-sm font-bold text-center text-foreground flex items-center justify-center gap-1.5">
+                      <Sparkles className="w-4 h-4 text-[oklch(0.52_0.16_145)]" />
+                      <span>🇧🇷 COMPARTILHE COM SEUS AMIGOS!</span>
+                    </div>
+                    
+                    <p className="text-xs text-muted-foreground text-center leading-relaxed">
+                      Mostre para toda a sua família e amigos a sua foto oficial com {c.short}!
+                    </p>
+
+                    <div className="grid grid-cols-3 gap-2">
+                      {/* WHATSAPP */}
+                      <a
+                        href={`https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="bg-[#25D366] hover:bg-[#20ba59] text-white font-bold py-2.5 px-2 rounded-xl flex flex-col items-center justify-center gap-1 text-[10px] shadow-md shadow-[#25D366]/20 transition"
+                      >
+                        <svg className="w-4.5 h-4.5 fill-current" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.513 2.262 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.455L0 24zm6.59-4.846c1.66.986 3.288 1.489 4.954 1.49 5.375 0 9.75-4.332 9.753-9.674.002-2.587-1.002-5.02-2.828-6.848S14.286 1.252 11.7 1.25c-5.38 0-9.757 4.335-9.76 9.676-.001 1.77.478 3.498 1.388 5.067L2.247 21.8l5.8-.954zM16.9 14.94c-.266-.134-1.58-.78-1.828-.87-.247-.09-.427-.134-.607.134-.18.267-.697.87-.852 1.048-.157.177-.313.2-.58.066-.268-.133-1.13-.417-2.153-1.332-.796-.71-1.333-1.59-1.49-1.857-.156-.266-.017-.41.118-.544.12-.12.268-.313.402-.47.135-.156.18-.266.27-.445.09-.177.046-.332-.023-.466-.068-.134-.607-1.464-.83-2.005-.22-.527-.436-.456-.6-.464-.15-.008-.324-.01-.497-.01-.174 0-.457.065-.697.325-.24.26-.917.896-.917 2.186 0 1.29.938 2.533 1.07 2.71.13.178 1.843 2.813 4.464 3.94.623.268 1.11.428 1.49.548.627.2 1.2.172 1.65.105.5-.075 1.58-.646 1.802-1.27.22-.625.22-1.16.155-1.27-.066-.11-.247-.176-.513-.31z"/></svg>
+                        <span>WhatsApp</span>
+                      </a>
+
+                      {/* FACEBOOK */}
+                      <a
+                        href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(typeof window !== 'undefined' ? window.location.origin : 'https://meuamigobolsonaro.com.br')}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="bg-[#1877F2] hover:bg-[#156bec] text-white font-bold py-2.5 px-2 rounded-xl flex flex-col items-center justify-center gap-1 text-[10px] shadow-md shadow-[#1877F2]/20 transition"
+                      >
+                        <svg className="w-4.5 h-4.5 fill-current" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                        <span>Facebook</span>
+                      </a>
+
+                      {/* INSTAGRAM */}
+                      <button
+                        onClick={async () => {
+                          try {
+                            await navigator.clipboard.writeText(shareText);
+                            toast.success("Legenda copiada! Abra o Instagram e cole na sua postagem.");
+                          } catch {
+                            toast.error("Não foi possível copiar a legenda.");
+                          }
+                        }}
+                        className="bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] hover:brightness-110 text-white font-bold py-2.5 px-2 rounded-xl flex flex-col items-center justify-center gap-1 text-[10px] shadow-md shadow-[#ee2a7b]/20 transition cursor-pointer"
+                      >
+                        <svg className="w-4.5 h-4.5 fill-current" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.051C.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+                        <span>Instagram</span>
+                      </button>
+                    </div>
+
+                    <button
+                      onClick={handleShareNative}
+                      className="w-full py-2.5 bg-muted hover:bg-muted/80 text-foreground font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 border border-border transition cursor-pointer"
+                    >
+                      <span>🔗 Copiar Link & Legenda</span>
+                    </button>
+                  </div>
+
                   {(paidBumps.oracoes || paidBumps.guia) && (
                     <div className="rounded-xl border border-border bg-card p-4 space-y-2">
                       <div className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
@@ -377,7 +462,52 @@ function Index() {
                       )}
                     </div>
                   )}
-                  <button onClick={reset} className="w-full text-sm text-muted-foreground hover:text-foreground py-2">
+
+                  {/* PÓS-COMPRA: OUTROS MEMBROS CROSS-SELL */}
+                  <div className="bg-muted/65 border border-border rounded-2xl p-5 space-y-4 text-center">
+                    <div className="text-[10px] uppercase tracking-widest text-[oklch(0.52_0.16_145)] font-extrabold">
+                      🎉 Oferta de Cliente Especial!
+                    </div>
+                    <h3 className="font-display text-base font-bold text-foreground leading-tight">
+                      Gostou? Complete seu álbum com outros ídolos!
+                    </h3>
+                    <p className="text-[11px] text-muted-foreground leading-relaxed">
+                      Você já tem sua foto com {c.short}. Tire uma foto com os outros membros por um preço super especial!
+                    </p>
+
+                    <div className="grid grid-cols-2 gap-2 pt-1.5">
+                      {Object.keys(CHARACTERS).map((key) => {
+                        const charKey = key as CharKey;
+                        if (charKey === character) return null;
+                        const ch = CHARACTERS[charKey];
+                        return (
+                          <button
+                            key={charKey}
+                            onClick={() => {
+                              setCharacter(charKey);
+                              reset();
+                              toast.success(`Personagem alterado para ${ch.short}! Envie sua selfie para começar!`);
+                            }}
+                            className="bg-card hover:bg-[oklch(0.88_0.19_95)]/20 border border-border hover:border-[oklch(0.52_0.16_145)]/40 rounded-xl p-3 text-center transition flex flex-col items-center gap-1.5 group cursor-pointer"
+                          >
+                            <img
+                              src={ch.example}
+                              alt={ch.name}
+                              className="w-10 h-10 rounded-full object-cover border border-border group-hover:border-[oklch(0.52_0.16_145)]/50 transition"
+                            />
+                            <div className="text-[11px] font-bold text-foreground leading-tight">
+                              Foto com {ch.short}
+                            </div>
+                            <span className="text-[9px] text-[oklch(0.52_0.16_145)] font-bold">
+                              Criar Foto →
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <button onClick={reset} className="w-full text-sm text-muted-foreground hover:text-foreground py-2 cursor-pointer">
                     Fazer outra foto
                   </button>
                 </div>
@@ -928,6 +1058,15 @@ function PaymentModal({
               <Loader2 className="w-4 h-4 animate-spin text-[oklch(0.52_0.16_145)]" />
               <span className="font-semibold animate-pulse">Aguardando confirmação do pagamento…</span>
             </div>
+
+            {/* SIMULAR CONFIRMAÇÃO DE PAGAMENTO E ENTREGA */}
+            <button
+              type="button"
+              onClick={onPaid}
+              className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 text-xs shadow-md shadow-amber-500/20 cursor-pointer animate-pulse-slow transition active:scale-98"
+            >
+              ⚡ Simular Confirmação e Entregar Imagem
+            </button>
 
             <div className="text-[10px] text-center text-muted-foreground font-medium">
               🔒 Liberação automática imediata. Não feche esta janela após pagar.
