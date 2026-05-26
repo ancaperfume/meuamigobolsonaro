@@ -10,6 +10,10 @@ import {
 
 import appCss from "../styles.css?url";
 
+// 👉 Cole aqui seu Meta Pixel ID (somente números, ex: "123456789012345")
+//    Quando vazio, nenhum script é carregado.
+const META_PIXEL_ID = "";
+
 function NotFoundComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
