@@ -2,9 +2,16 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { generatePhoto } from "@/lib/photo.functions";
+import { createPixCharge, getOrderStatus } from "@/lib/payment.functions";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
-import { Loader2, Upload, Lock, Check, ShieldCheck, Heart, Sparkles, X } from "lucide-react";
+import { Loader2, Upload, Lock, Check, ShieldCheck, Heart, Sparkles, X, Copy } from "lucide-react";
+
+declare global {
+  interface Window {
+    fbq?: (...args: any[]) => void;
+  }
+}
 
 import exampleJair from "@/assets/example-jair.jpg";
 import exampleFlavio from "@/assets/example-flavio.jpg";
@@ -152,13 +159,17 @@ function Index() {
     setPaidBumps({ oracoes: false, guia: false });
   };
 
-  const simulatePayment = () => {
+  const handlePaid = useCallback(() => {
     setShowPayment(false);
     setPaidBumps(bumps);
     setStep("paid");
     setTimeout(() => setShowUpsell(true), 600);
     toast.success("Pagamento aprovado! Seus itens foram liberados.");
-  };
+    // Meta Pixel — Purchase event
+    if (typeof window !== "undefined" && window.fbq) {
+      window.fbq("track", "Purchase", { value: total, currency: "BRL" });
+    }
+  }, [bumps, total]);
 
   return (
     <div className="min-h-screen bg-background bg-parchment">
@@ -367,11 +378,12 @@ function Index() {
       {showPayment && (
         <PaymentModal
           character={c.name}
+          characterKey={character}
           bumps={bumps}
           setBumps={setBumps}
           total={total}
           onClose={() => setShowPayment(false)}
-          onPay={simulatePayment}
+          onPaid={handlePaid}
         />
       )}
       {showUpsell && <UpsellModal onClose={() => setShowUpsell(false)} />}
@@ -441,73 +453,183 @@ function BrasilFlag({ className }: { className?: string }) {
 
 function PaymentModal({
   character,
+  characterKey,
   bumps,
   setBumps,
   total,
   onClose,
-  onPay,
+  onPaid,
 }: {
   character: string;
+  characterKey: CharKey;
   bumps: { oracoes: boolean; guia: boolean };
   setBumps: (b: { oracoes: boolean; guia: boolean }) => void;
   total: number;
   onClose: () => void;
-  onPay: () => void;
+  onPaid: () => void;
 }) {
+  const callCreate = useServerFn(createPixCharge);
+  const callStatus = useServerFn(getOrderStatus);
+  const [phase, setPhase] = useState<"cart" | "pix">("cart");
+  const [loading, setLoading] = useState(false);
+  const [pix, setPix] = useState<{ externalId: string; qrCode: string; qrCodeImage: string } | null>(null);
+
+  // Poll order status every 3s while in pix phase
+  useEffect(() => {
+    if (phase !== "pix" || !pix) return;
+    let active = true;
+    const tick = async () => {
+      try {
+        const res = await callStatus({ data: { externalId: pix.externalId } });
+        if (active && res.status === "paid") {
+          onPaid();
+        }
+      } catch (e) {
+        // silent retry
+      }
+    };
+    const id = setInterval(tick, 3000);
+    return () => {
+      active = false;
+      clearInterval(id);
+    };
+  }, [phase, pix, callStatus, onPaid]);
+
+  const handleGenerate = async () => {
+    setLoading(true);
+    try {
+      const res = await callCreate({
+        data: {
+          amount: Number(total.toFixed(2)),
+          character: characterKey,
+          bumps,
+        },
+      });
+      setPix(res);
+      setPhase("pix");
+      if (typeof window !== "undefined" && window.fbq) {
+        window.fbq("track", "InitiateCheckout", { value: total, currency: "BRL" });
+      }
+    } catch (e: any) {
+      toast.error(e?.message ?? "Falha ao gerar o Pix.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const copy = async (txt: string) => {
+    try {
+      await navigator.clipboard.writeText(txt);
+      toast.success("Código Pix copiado!");
+    } catch {
+      toast.error("Não foi possível copiar.");
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
       <div className="bg-background rounded-2xl max-w-lg w-full my-8 shadow-2xl border border-border overflow-hidden">
         <div className="bg-[oklch(0.52_0.16_145)] text-white px-6 py-4 flex items-center justify-between">
-          <div className="font-display text-xl">Finalizar pedido</div>
+          <div className="font-display text-xl">
+            {phase === "cart" ? "Finalizar pedido" : "Pague com Pix"}
+          </div>
           <button onClick={onClose} className="opacity-80 hover:opacity-100"><X className="w-5 h-5" /></button>
         </div>
 
-        <div className="p-6 space-y-4">
-          <div className="flex items-center justify-between py-3 border-b border-border">
-            <div>
-              <div className="font-semibold">Foto com {character}</div>
-              <div className="text-xs text-muted-foreground">Versão HD sem marca d'água</div>
+        {phase === "cart" && (
+          <div className="p-6 space-y-4">
+            <div className="flex items-center justify-between py-3 border-b border-border">
+              <div>
+                <div className="font-semibold">Foto com {character}</div>
+                <div className="text-xs text-muted-foreground">Versão HD sem marca d'água</div>
+              </div>
+              <div className="font-semibold">R$ 6,22</div>
             </div>
-            <div className="font-semibold">R$ 6,22</div>
+
+            <div className="text-xs uppercase tracking-wider text-muted-foreground font-semibold pt-2">
+              🔥 Adicione ao seu pedido
+            </div>
+
+            <OrderBump
+              checked={bumps.oracoes}
+              onToggle={() => setBumps({ ...bumps, oracoes: !bumps.oracoes })}
+              title="250+ Orações Secretas"
+              desc="Compilado exclusivo de orações poderosas para sua família e seu país."
+              price="R$ 3,99"
+              badge="MAIS PEDIDO"
+            />
+            <OrderBump
+              checked={bumps.guia}
+              onToggle={() => setBumps({ ...bumps, guia: !bumps.guia })}
+              title="GUIA FILHO DE DIREITA"
+              desc="O manual definitivo para criar seus filhos com os verdadeiros valores."
+              price="R$ 14,90"
+            />
+
+            <div className="bg-muted rounded-xl p-4 flex items-center justify-between">
+              <div className="text-sm text-muted-foreground">Total</div>
+              <div className="font-display text-3xl">R$ {total.toFixed(2).replace(".", ",")}</div>
+            </div>
+
+            <button
+              onClick={handleGenerate}
+              disabled={loading}
+              className="w-full bg-[oklch(0.52_0.16_145)] hover:bg-[oklch(0.45_0.16_145)] disabled:opacity-60 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2"
+            >
+              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <ShieldCheck className="w-5 h-5" />}
+              {loading ? "Gerando Pix…" : "Pagar com Pix"}
+            </button>
+
+            <div className="text-[11px] text-center text-muted-foreground">
+              🔒 Pagamento processado pela NexusPag
+            </div>
           </div>
+        )}
 
-          <div className="text-xs uppercase tracking-wider text-muted-foreground font-semibold pt-2">
-            🔥 Adicione ao seu pedido
+        {phase === "pix" && pix && (
+          <div className="p-6 space-y-4">
+            <div className="text-center">
+              <div className="text-sm text-muted-foreground">Total a pagar</div>
+              <div className="font-display text-3xl">R$ {total.toFixed(2).replace(".", ",")}</div>
+            </div>
+
+            {pix.qrCodeImage && (
+              <div className="flex justify-center">
+                <img
+                  src={pix.qrCodeImage.startsWith("data:") ? pix.qrCodeImage : `data:image/png;base64,${pix.qrCodeImage}`}
+                  alt="QR Code Pix"
+                  className="w-56 h-56 rounded-lg border-4 border-[oklch(0.88_0.19_95)] bg-white"
+                />
+              </div>
+            )}
+
+            {pix.qrCode && (
+              <div>
+                <div className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-2">
+                  Pix Copia e Cola
+                </div>
+                <div className="bg-muted rounded-lg p-3 text-xs break-all font-mono mb-2 max-h-24 overflow-y-auto">
+                  {pix.qrCode}
+                </div>
+                <button
+                  onClick={() => copy(pix.qrCode)}
+                  className="w-full bg-[oklch(0.18_0.04_145)] hover:bg-[oklch(0.25_0.04_145)] text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2"
+                >
+                  <Copy className="w-4 h-4" /> Copiar código
+                </button>
+              </div>
+            )}
+
+            <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground py-2">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Aguardando confirmação do pagamento…
+            </div>
+
+            <div className="text-[11px] text-center text-muted-foreground">
+              Liberação automática assim que o Pix cair. Não feche essa janela.
+            </div>
           </div>
-
-          <OrderBump
-            checked={bumps.oracoes}
-            onToggle={() => setBumps({ ...bumps, oracoes: !bumps.oracoes })}
-            title="250+ Orações Secretas"
-            desc="Compilado exclusivo de orações poderosas para sua família e seu país."
-            price="R$ 3,99"
-            badge="MAIS PEDIDO"
-          />
-          <OrderBump
-            checked={bumps.guia}
-            onToggle={() => setBumps({ ...bumps, guia: !bumps.guia })}
-            title="GUIA FILHO DE DIREITA"
-            desc="O manual definitivo para criar seus filhos com os verdadeiros valores."
-            price="R$ 14,90"
-          />
-
-          <div className="bg-muted rounded-xl p-4 flex items-center justify-between">
-            <div className="text-sm text-muted-foreground">Total</div>
-            <div className="font-display text-3xl">R$ {total.toFixed(2).replace(".", ",")}</div>
-          </div>
-
-          <button
-            onClick={onPay}
-            className="w-full bg-[oklch(0.52_0.16_145)] hover:bg-[oklch(0.45_0.16_145)] text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2"
-          >
-            <ShieldCheck className="w-5 h-5" />
-            Simular pagamento aprovado
-          </button>
-
-          <div className="text-[11px] text-center text-muted-foreground">
-            🔒 Ambiente de teste · nenhum valor é cobrado
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );
