@@ -5,7 +5,7 @@ import { generatePhoto } from "@/lib/photo.functions";
 import { createPixCharge, getOrderStatus } from "@/lib/payment.functions";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
-import { Loader2, Upload, Lock, Check, ShieldCheck, Heart, Sparkles, X, Copy } from "lucide-react";
+import { Loader2, Upload, Lock, Check, ShieldCheck, Heart, Sparkles, X, Copy, Smartphone, Monitor, CheckCircle2, AlertCircle, Info, HelpCircle, ChevronRight } from "lucide-react";
 
 declare global {
   interface Window {
@@ -576,6 +576,8 @@ function PaymentModal({
   const [loading, setLoading] = useState(false);
   const [pix, setPix] = useState<{ externalId: string; qrCode: string; qrCodeImage: string } | null>(null);
   const [timeLeft, setTimeLeft] = useState(600); // 10 minutes
+  const [copied, setCopied] = useState(false);
+  const [pixTab, setPixTab] = useState<"mobile" | "computer">("mobile");
 
   useEffect(() => {
     if (phase !== "pix" || timeLeft <= 0) return;
@@ -637,6 +639,7 @@ function PaymentModal({
   const copy = async (txt: string) => {
     try {
       await navigator.clipboard.writeText(txt);
+      setCopied(true);
       toast.success("Código Pix copiado!");
     } catch {
       toast.error("Não foi possível copiar.");
@@ -726,51 +729,194 @@ function PaymentModal({
         )}
 
         {phase === "pix" && pix && (
-          <div className="p-6 space-y-4">
+          <div className="p-6 space-y-5">
             <div className="text-center">
-              <div className="text-sm text-muted-foreground">Total a pagar</div>
-              <div className="font-display text-3xl">R$ {total.toFixed(2).replace(".", ",")}</div>
+              <div className="text-sm text-muted-foreground font-semibold">Valor total a pagar</div>
+              <div className="font-display text-4xl text-[oklch(0.52_0.16_145)] font-bold">R$ {total.toFixed(2).replace(".", ",")}</div>
             </div>
 
-            <div className="bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 rounded-xl p-3 text-center text-xs font-medium flex items-center justify-center gap-2">
-              <span className="animate-pulse">⚠️</span>
-              <span>O seu Pix promocional expira em <span className="font-bold font-mono">{formatTime(timeLeft)}</span> minutos.</span>
+            <div className="bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 rounded-xl p-3 text-center text-xs font-semibold flex items-center justify-center gap-2">
+              <span className="animate-pulse text-sm">⚠️</span>
+              <span>Seu Pix promocional expira em: <span className="font-bold font-mono text-sm">{formatTime(timeLeft)}</span></span>
             </div>
 
-            {pix.qrCodeImage && (
-              <div className="flex justify-center">
-                <img
-                  src={pix.qrCodeImage.startsWith("data:") ? pix.qrCodeImage : `data:image/png;base64,${pix.qrCodeImage}`}
-                  alt="QR Code Pix"
-                  className="w-56 h-56 rounded-lg border-4 border-[oklch(0.88_0.19_95)] bg-white"
-                />
+            {/* ABA DE SELEÇÃO: CELULAR vs COMPUTADOR */}
+            <div className="grid grid-cols-2 gap-2 p-1 bg-muted rounded-lg border border-border">
+              <button
+                type="button"
+                onClick={() => setPixTab("mobile")}
+                className={`py-2.5 px-3 rounded-md text-xs font-bold transition flex items-center justify-center gap-2 ${
+                  pixTab === "mobile"
+                    ? "bg-background text-foreground shadow-sm border border-border"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Smartphone className="w-4 h-4 text-[oklch(0.52_0.16_145)]" />
+                Pagar no Celular
+              </button>
+              <button
+                type="button"
+                onClick={() => setPixTab("computer")}
+                className={`py-2.5 px-3 rounded-md text-xs font-bold transition flex items-center justify-center gap-2 ${
+                  pixTab === "computer"
+                    ? "bg-background text-foreground shadow-sm border border-border"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Monitor className="w-4 h-4 text-primary" />
+                Pagar no Computador
+              </button>
+            </div>
+
+            {/* CONTEÚDO DA ABA CELULAR (PIX COPIA E COLA) */}
+            {pixTab === "mobile" && (
+              <div className="space-y-4">
+                {pix.qrCode && (
+                  <div className="space-y-3">
+                    <button
+                      onClick={() => copy(pix.qrCode)}
+                      className={`w-full py-4 px-4 rounded-2xl flex flex-col items-center justify-center gap-1.5 transition-all shadow-lg active:scale-98 ${
+                        copied
+                          ? "bg-emerald-600 hover:bg-emerald-700 text-white ring-4 ring-emerald-600/30"
+                          : "bg-[oklch(0.52_0.16_145)] hover:bg-[oklch(0.45_0.16_145)] text-white border-2 border-yellow-400 shadow-[oklch(0.52_0.16_145)]/20 animate-pulse-slow"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 font-display text-lg font-bold">
+                        {copied ? <Check className="w-6 h-6 animate-bounce" /> : <Copy className="w-5 h-5" />}
+                        {copied ? "CÓDIGO COPIADO COM SUCESSO!" : "1. CLIQUE AQUI PARA COPIAR O PIX"}
+                      </div>
+                      <span className="text-[11px] opacity-90 font-medium">
+                        {copied ? "Agora é só abrir o app do seu banco e colar" : "Toque acima para salvar o código no celular"}
+                      </span>
+                    </button>
+
+                    {/* BANNER VISUAL GIGANTE DE CONFIRMAÇÃO */}
+                    {copied && (
+                      <div className="bg-emerald-500/10 border-2 border-emerald-500 text-emerald-800 dark:text-emerald-300 rounded-xl p-4 space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                        <div className="flex items-center gap-2 font-bold text-base">
+                          <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
+                          <span>✅ PIX COPIADO!</span>
+                        </div>
+                        <p className="text-xs font-semibold leading-relaxed">
+                          Tudo pronto! O código Pix já está guardado no seu celular. Agora abra o aplicativo do seu banco para fazer o pagamento.
+                        </p>
+                      </div>
+                    )}
+
+                    {/* PASSO A PASSO DIDÁTICO */}
+                    <div className="bg-muted/60 rounded-xl p-4 border border-border space-y-4">
+                      <div className="text-xs uppercase tracking-wider text-muted-foreground font-bold flex items-center gap-1.5 pb-2 border-b border-border">
+                        <HelpCircle className="w-4 h-4 text-[oklch(0.52_0.16_145)]" />
+                        <span>Como Pagar no Celular? Passo a Passo</span>
+                      </div>
+                      
+                      <div className="space-y-4">
+                        <div className="flex gap-3">
+                          <div className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs flex-shrink-0 transition-colors ${
+                            copied ? "bg-emerald-600 text-white" : "bg-[oklch(0.52_0.16_145)] text-white"
+                          }`}>
+                            1
+                          </div>
+                          <div>
+                            <h4 className="font-bold text-xs text-foreground">Copie o código</h4>
+                            <p className="text-[11px] text-muted-foreground mt-0.5">
+                              {copied 
+                                ? "Concluído! O código já está copiado." 
+                                : "Clique no botão verde acima para copiar o código Pix automático."}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex gap-3">
+                          <div className="w-7 h-7 rounded-full bg-[oklch(0.52_0.16_145)] text-white flex items-center justify-center font-bold text-xs flex-shrink-0">
+                            2
+                          </div>
+                          <div>
+                            <h4 className="font-bold text-xs text-foreground">Abra o App do seu Banco</h4>
+                            <p className="text-[11px] text-muted-foreground mt-0.5">
+                              Saia desta tela e abra o aplicativo onde você costuma ver seu saldo ou fazer transferências (ex: Caixa, Banco do Brasil, Itaú, Bradesco, Nubank).
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex gap-3">
+                          <div className="w-7 h-7 rounded-full bg-[oklch(0.52_0.16_145)] text-white flex items-center justify-center font-bold text-xs flex-shrink-0">
+                            3
+                          </div>
+                          <div>
+                            <h4 className="font-bold text-xs text-foreground">Selecione "Pix Copia e Cola"</h4>
+                            <p className="text-[11px] text-muted-foreground mt-0.5">
+                              Vá na área <strong>Pix</strong> do banco, depois procure pela opção <strong>Pix Copia e Cola</strong> (ou Pagar &gt; Pix Copia e Cola).
+                            </p>
+                            <div className="bg-amber-500/10 border border-amber-500/20 text-amber-800 dark:text-amber-300 rounded-lg p-2.5 mt-2 text-[10px] font-semibold flex gap-2">
+                              <Info className="w-3.5 h-3.5 text-amber-600 flex-shrink-0 mt-0.5" />
+                              <span><strong>Super Dica:</strong> Ao abrir o app de alguns bancos (como Nubank e Itaú), ele detecta o código sozinho e pergunta: <em>"Quer fazer um Pix para a NexusPag?"</em>. Basta aceitar!</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex gap-3">
+                          <div className="w-7 h-7 rounded-full bg-[oklch(0.52_0.16_145)] text-white flex items-center justify-center font-bold text-xs flex-shrink-0">
+                            4
+                          </div>
+                          <div>
+                            <h4 className="font-bold text-xs text-foreground">Cole e confirme o pagamento</h4>
+                            <p className="text-[11px] text-muted-foreground mt-0.5">
+                              Cole o código na caixinha, confira se o valor está correto e confirme a transação. O sistema detectará o pagamento na hora!
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* DETALHES DE EXPANSÃO PARA CÓDIGO POR EXTENSO */}
+                    <div className="pt-1">
+                      <details className="group">
+                        <summary className="text-[10px] text-muted-foreground font-semibold cursor-pointer list-none flex items-center gap-1 hover:text-foreground transition select-none">
+                          <ChevronRight className="w-3 h-3 group-open:rotate-90 transition-transform" />
+                          <span>Mostrar código Pix por extenso (se precisar ver ou copiar manualmente)</span>
+                        </summary>
+                        <div className="bg-muted rounded-lg p-2.5 text-[10px] break-all font-mono mt-1.5 max-h-20 overflow-y-auto border border-border select-all">
+                          {pix.qrCode}
+                        </div>
+                      </details>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
-            {pix.qrCode && (
-              <div>
-                <div className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-2">
-                  Pix Copia e Cola
+            {/* CONTEÚDO DA ABA COMPUTADOR (QR CODE) */}
+            {pixTab === "computer" && (
+              <div className="space-y-4 text-center">
+                <p className="text-xs text-muted-foreground font-medium max-w-sm mx-auto">
+                  Abra o aplicativo de banco no seu celular, escolha a opção **"Ler QR Code"** dentro do Pix e aponte a câmera para a tela abaixo:
+                </p>
+
+                {pix.qrCodeImage && (
+                  <div className="flex justify-center">
+                    <img
+                      src={pix.qrCodeImage.startsWith("data:") ? pix.qrCodeImage : `data:image/png;base64,${pix.qrCodeImage}`}
+                      alt="QR Code Pix"
+                      className="w-52 h-52 rounded-lg border-4 border-[oklch(0.88_0.19_95)] bg-white p-1"
+                    />
+                  </div>
+                )}
+
+                <div className="bg-blue-500/10 border border-blue-500/20 text-blue-800 dark:text-blue-300 rounded-xl p-3 text-[11px] font-semibold flex items-center justify-center gap-2 max-w-xs mx-auto">
+                  <Smartphone className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                  <span>Use esta opção se estiver no computador e quiser pagar com o seu celular.</span>
                 </div>
-                <div className="bg-muted rounded-lg p-3 text-xs break-all font-mono mb-2 max-h-24 overflow-y-auto">
-                  {pix.qrCode}
-                </div>
-                <button
-                  onClick={() => copy(pix.qrCode)}
-                  className="w-full bg-[oklch(0.18_0.04_145)] hover:bg-[oklch(0.25_0.04_145)] text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2"
-                >
-                  <Copy className="w-4 h-4" /> Copiar código
-                </button>
               </div>
             )}
 
-            <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground py-2">
-              <Loader2 className="w-4 h-4 animate-spin" />
-              Aguardando confirmação do pagamento…
+            <div className="flex items-center justify-center gap-2.5 text-xs text-muted-foreground py-2 border-t border-border pt-4">
+              <Loader2 className="w-4 h-4 animate-spin text-[oklch(0.52_0.16_145)]" />
+              <span className="font-semibold animate-pulse">Aguardando confirmação do pagamento…</span>
             </div>
 
-            <div className="text-[11px] text-center text-muted-foreground">
-              Liberação automática assim que o Pix cair. Não feche essa janela.
+            <div className="text-[10px] text-center text-muted-foreground font-medium">
+              🔒 Liberação automática imediata. Não feche esta janela após pagar.
             </div>
           </div>
         )}
