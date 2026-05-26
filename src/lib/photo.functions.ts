@@ -1,5 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
+import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
+import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 const inputSchema = z.object({
   imageBase64: z.string().min(100),
@@ -17,6 +19,33 @@ const characterPrompts: Record<string, string> = {
 export const generatePhoto = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => inputSchema.parse(data))
   .handler(async ({ data }) => {
+    // Get client IP address
+    const request = getRequest();
+    const ipAddress = request.headers.get("cf-connecting-ip") || 
+                      request.headers.get("x-forwarded-for")?.split(",")[0].trim() || 
+                      "127.0.0.1";
+
+    // 🛡️ ABUSE PROTECTION: Max 3 free previews in 24h unless they completed a payment
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const { count: genCount } = await supabaseAdmin
+      .from("generations")
+      .select("*", { count: "exact", head: true })
+      .eq("ip_address", ipAddress)
+      .gte("created_at", oneDayAgo);
+
+    if (genCount && genCount >= 3) {
+      // Check if they have at least one paid order associated with this IP
+      const { count: paidCount } = await supabaseAdmin
+        .from("orders")
+        .select("*", { count: "exact", head: true })
+        .eq("ip_address", ipAddress)
+        .eq("status", "paid");
+
+      if (!paidCount || paidCount === 0) {
+        throw new Error("Você atingiu o limite de 3 fotos gratuitas. Por favor, conclua o pagamento de uma de suas fotos geradas no celular para continuar criando novas!");
+      }
+    }
+
     // Obfuscated OpenRouter key to prevent GitHub secret scanner block
     const keyParts = [
       "sk-or-",
@@ -94,5 +123,13 @@ SCENE COMPOSITION & STYLE:
       }
     }
     if (images.length === 0) throw new Error("A IA não retornou imagem.");
+
+    // Log the successful generation for this IP
+    try {
+      await supabaseAdmin.from("generations").insert({ ip_address: ipAddress });
+    } catch (logErr) {
+      console.error("Failed to log generation in DB", logErr);
+    }
+
     return { imageUrl: images[0] };
   });

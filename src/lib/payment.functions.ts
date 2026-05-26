@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
@@ -17,6 +18,11 @@ export const createPixCharge = createServerFn({ method: "POST" })
     const apiKey = process.env.NEXUSPAG_API_KEY;
     if (!apiKey) throw new Error("Chave NEXUSPAG_API_KEY ausente nas variáveis de ambiente da Lovable.");
 
+    const request = getRequest();
+    const ipAddress = request.headers.get("cf-connecting-ip") || 
+                      request.headers.get("x-forwarded-for")?.split(",")[0].trim() || 
+                      "127.0.0.1";
+
     const externalId = `bma-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
     const { error: insertErr } = await supabaseAdmin.from("orders").insert({
@@ -25,6 +31,7 @@ export const createPixCharge = createServerFn({ method: "POST" })
       status: "pending",
       character: data.character,
       bumps: data.bumps,
+      ip_address: ipAddress,
     });
     if (insertErr) {
       console.error("orders insert error", insertErr);
