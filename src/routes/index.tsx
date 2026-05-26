@@ -141,6 +141,12 @@ function Index() {
         });
         setGeneratedUrl(res.imageUrl);
         setStep("preview");
+        if (typeof window !== "undefined" && window.fbq) {
+          window.fbq("track", "ViewContent", {
+            content_name: `Foto com ${character}`,
+            content_category: "Visualização de Foto com IA",
+          });
+        }
       } catch (e: any) {
         toast.error(e?.message ?? "Não foi possível gerar a foto.");
         setStep("idle");

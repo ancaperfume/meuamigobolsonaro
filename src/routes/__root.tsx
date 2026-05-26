@@ -12,7 +12,7 @@ import appCss from "../styles.css?url";
 
 // 👉 Cole aqui seu Meta Pixel ID (somente números, ex: "123456789012345")
 //    Quando vazio, nenhum script é carregado.
-const META_PIXEL_ID = "";
+const META_PIXEL_ID = "27126474183629240";
 
 function NotFoundComponent() {
   return (
