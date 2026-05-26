@@ -8,10 +8,10 @@ const inputSchema = z.object({
 });
 
 const characterPrompts: Record<string, string> = {
-  jair: "Jair Bolsonaro (the well-known Brazilian politician — older man with white hair, smiling warmly, wearing a yellow Brazil soccer jersey)",
-  flavio: "Flávio Bolsonaro (Brazilian senator — dark hair, dark-rimmed glasses, blue suit, friendly smile)",
-  michelle: "Michelle Bolsonaro (elegant blonde Brazilian first lady, warm smile, modest floral dress)",
-  nikolas: "Nikolas Ferreira (young Brazilian politician — short dark hair, glasses, polo shirt, friendly smile)",
+  jair: "Jair Bolsonaro, the famous senior Brazilian political leader, an older man with combed grey-white hair, characteristic friendly wrinkles around his eyes, a warm natural smile, wearing a yellow Brazil soccer jersey, looking directly at the camera.",
+  flavio: "Flávio Bolsonaro, the Brazilian senator in his late 40s, with short combed dark hair, dark-rimmed rectangular glasses, a friendly smile, wearing a professional blue suit with a white dress shirt.",
+  michelle: "Michelle Bolsonaro, the elegant former Brazilian first lady in her early 40s. She has styled shoulder-length light brown hair with blonde highlights, refined and soft facial features, a gentle elegant smile, wearing a classic modest pastel-colored dress or elegant business blazer.",
+  nikolas: "Nikolas Ferreira, the young Brazilian politician in his late 20s. He has a very youthful face, short styled dark hair, a neatly trimmed thin beard (stubble), wearing rectangular dark-rimmed glasses, a warm and friendly energetic smile, wearing a neat modern dark polo shirt.",
 };
 
 export const generatePhoto = createServerFn({ method: "POST" })
@@ -21,7 +21,19 @@ export const generatePhoto = createServerFn({ method: "POST" })
     if (!apiKey) throw new Error("LOVABLE_API_KEY missing");
 
     const character = characterPrompts[data.character];
-    const prompt = `Take the person in this uploaded photo and place them naturally standing next to ${character}. Keep the person's face, hairstyle, skin tone, and clothing exactly as in the input photo — do not alter them. The result should look like a real casual smartphone selfie where the two are friends posing together, warm natural lighting, slight phone-camera grain, both smiling at the camera. Keep the background simple and cozy (a Brazilian home or outdoor setting). Output a single realistic photo.`;
+    const prompt = `CRITICAL IDENTITY PRESERVATION RULES:
+1. You MUST preserve the EXACT faces, physical features, hairstyles, skin tones, and clothing of ALL the people present in the input photo.
+2. Under no circumstances should you redraw, alter, or beautify the people's faces. Keep their identities 100% identical and high-fidelity to the source image.
+3. If there is one person in the photo, place that exact person naturally standing next to ${character}.
+4. If there are multiple people in the photo, keep ALL of them in the scene, preserving their positions, and place them as a group posing naturally together next to ${character}.
+
+SCENE COMPOSITION & STYLE:
+- The result must look like a high-quality, realistic, casual smartphone selfie where everyone is friends posing together.
+- Warm, natural lighting, shot in a high-quality realistic setting.
+- Soft phone-camera texture and realistic skin details (no artificial plastic/airbrushed skin effect).
+- Everyone in the photo should be smiling naturally at the camera.
+- The background should be a cozy, realistic setting (such as a modern Brazilian home living room, a veranda, or an outdoor garden).
+- Output a single realistic, coherent, and highly convincing photo.`;
 
     const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
