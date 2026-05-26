@@ -127,7 +127,7 @@ function Index() {
   const [generatedUrl, setGeneratedUrl] = useState<string | null>(null);
   const [originalPreview, setOriginalPreview] = useState<string | null>(null);
   const [showPayment, setShowPayment] = useState(false);
-  const [showUpsell, setShowUpsell] = useState(false);
+  const [activeUpsell, setActiveUpsell] = useState<"darkhorse" | "grupo" | null>(null);
   const [paidBumps, setPaidBumps] = useState<PaidBumps>({ oracoes: false, guia: false });
   const [bumps, setBumps] = useState<PaidBumps>({
     oracoes: false,
@@ -199,7 +199,7 @@ function Index() {
     setGeneratedUrl(null);
     setOriginalPreview(null);
     setShowPayment(false);
-    setShowUpsell(false);
+    setActiveUpsell(null);
     setBumps({ oracoes: false, guia: false });
     setPaidBumps({ oracoes: false, guia: false });
   };
@@ -208,7 +208,7 @@ function Index() {
     setShowPayment(false);
     setPaidBumps(bumps);
     setStep("paid");
-    setTimeout(() => setShowUpsell(true), 600);
+    setTimeout(() => setActiveUpsell("darkhorse"), 600);
     toast.success("Pagamento aprovado! Seus itens foram liberados.");
     // Meta Pixel — Purchase event
     if (typeof window !== "undefined" && window.fbq) {
@@ -641,11 +641,20 @@ function Index() {
           isDevMode={isDevMode}
         />
       )}
-      {showUpsell && (
+      {activeUpsell === "darkhorse" && (
         <UpsellModal 
+          type="darkhorse"
           characterKey={character} 
           isDevMode={isDevMode} 
-          onClose={() => setShowUpsell(false)} 
+          onClose={() => setActiveUpsell("grupo")} 
+        />
+      )}
+      {activeUpsell === "grupo" && (
+        <UpsellModal 
+          type="grupo"
+          characterKey={character} 
+          isDevMode={isDevMode} 
+          onClose={() => setActiveUpsell(null)} 
         />
       )}
     </div>
@@ -1135,13 +1144,15 @@ function OrderBump({
 }
 
 function UpsellModal({
+  type,
   characterKey,
   isDevMode,
   onClose,
 }: {
+  type: "darkhorse" | "grupo";
   characterKey: CharKey;
   isDevMode: boolean;
-  onClose: () => void;
+  onClose: (bought: boolean) => void;
 }) {
   const callCreate = useServerFn(createPixCharge);
   const callStatus = useServerFn(getOrderStatus);
@@ -1151,6 +1162,44 @@ function UpsellModal({
   const [timeLeft, setTimeLeft] = useState(600); // 10 minutes
   const [copied, setCopied] = useState(false);
   const [pixTab, setPixTab] = useState<"mobile" | "computer">("mobile");
+
+  const content = useMemo(() => {
+    if (type === "darkhorse") {
+      return {
+        titleOffer: <>Acesso na ÍNTEGRA ao filme<br/><span className="text-[oklch(0.88_0.19_95)]">DARK HORSE</span> completo</>,
+        titlePix: "Pague com Pix (Dark Horse)",
+        desc: "O documentário que a grande mídia não quis que você visse. Filme completo, sem cortes, em alta definição. Acesso vitalício imediato.",
+        features: [
+          "Filme completo em alta definição (HD)",
+          "Conteúdo exclusivo: entrevistas censuradas",
+          "Acesso vitalício, assista quando e onde quiser",
+        ],
+        btnLabel: "SIM, QUERO O DARK HORSE!",
+        btnLoadingLabel: "Gerando Pix do Dark Horse...",
+        simulatedLabel: "⚡ Simular Pagamento Aprovado (R$ 27)",
+        toastSuccess: "Pagamento do Dark Horse aprovado! Seu acesso foi liberado.",
+        downloadFile: "/downloads/dark-horse.pdf",
+        downloadName: "dark-horse.pdf",
+      };
+    } else {
+      return {
+        titleOffer: <>Grupo Exclusivo<br/><span className="text-[oklch(0.88_0.19_95)]">FAMÍLIA BOLSONARO</span> VIP</>,
+        titlePix: "Pague com Pix (Grupo VIP)",
+        desc: "Participe da comunidade VIP secreta de WhatsApp e Telegram com os bastidores dos maiores líderes conservadores e patriotas do Brasil.",
+        features: [
+          "Notícias e bastidores exclusivos direto da fonte",
+          "Grupo VIP com outros patriotas influentes",
+          "Lives secretas e debates sem censura toda semana",
+        ],
+        btnLabel: "QUERO ENTRAR NO GRUPO VIP!",
+        btnLoadingLabel: "Gerando Pix do Grupo VIP...",
+        simulatedLabel: "⚡ Simular Entrada no Grupo VIP (R$ 27)",
+        toastSuccess: "Inscrição aprovada! Bem-vindo à Família VIP.",
+        downloadFile: "https://t.me/GrupoExclusivoFamiliaBolsonaro",
+        downloadName: "grupo_VIP.html",
+      };
+    }
+  }, [type]);
 
   useEffect(() => {
     if (phase !== "pix" || timeLeft <= 0) return;
@@ -1174,15 +1223,18 @@ function UpsellModal({
       try {
         const res = await callStatus({ data: { externalId: pix.externalId } });
         if (active && res.status === "paid") {
-          toast.success("Pagamento do Dark Horse aprovado! Seu acesso foi liberado.");
-          // Trigger automatic download of the PDF document
-          const link = document.createElement("a");
-          link.href = "/downloads/dark-horse.pdf";
-          link.download = "dark-horse.pdf";
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          onClose();
+          toast.success(content.toastSuccess);
+          if (type === "darkhorse") {
+            const link = document.createElement("a");
+            link.href = content.downloadFile;
+            link.download = content.downloadName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+          } else {
+            window.open(content.downloadFile, "_blank");
+          }
+          onClose(true);
         }
       } catch (e) {
         // silent retry
@@ -1193,7 +1245,7 @@ function UpsellModal({
       active = false;
       clearInterval(id);
     };
-  }, [phase, pix, callStatus, onClose]);
+  }, [phase, pix, callStatus, onClose, content, type]);
 
   const handleBuy = async () => {
     setLoading(true);
@@ -1211,7 +1263,7 @@ function UpsellModal({
         window.fbq("track", "InitiateCheckout", { value: 27.00, currency: "BRL" });
       }
     } catch (e: any) {
-      toast.error(e?.message ?? "Falha ao gerar o Pix do Dark Horse.");
+      toast.error(e?.message ?? `Falha ao gerar o Pix: ${content.btnLoadingLabel}`);
     } finally {
       setLoading(false);
     }
@@ -1228,46 +1280,39 @@ function UpsellModal({
   };
 
   const simulateSuccess = () => {
-    toast.success("Pagamento do Dark Horse aprovado com sucesso (Simulado)!");
-    const link = document.createElement("a");
-    link.href = "/downloads/dark-horse.pdf";
-    link.download = "dark-horse.pdf";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    onClose();
+    toast.success(`${content.toastSuccess} (Simulado)`);
+    if (type === "darkhorse") {
+      const link = document.createElement("a");
+      link.href = content.downloadFile;
+      link.download = content.downloadName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } else {
+      window.open(content.downloadFile, "_blank");
+    }
+    onClose(true);
   };
 
   return (
     <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
       <div className="bg-background rounded-2xl max-w-lg w-full my-8 shadow-2xl border-2 border-[oklch(0.88_0.19_95)] overflow-hidden">
         <div className="bg-gradient-to-br from-[oklch(0.28_0.13_265)] to-[oklch(0.18_0.04_145)] text-white px-6 py-8 text-center relative">
-          <button onClick={onClose} className="absolute top-3 right-3 opacity-70 hover:opacity-100 cursor-pointer"><X className="w-5 h-5" /></button>
+          <button onClick={() => onClose(false)} className="absolute top-3 right-3 opacity-70 hover:opacity-100 cursor-pointer"><X className="w-5 h-5" /></button>
           <div className="text-xs uppercase tracking-[0.3em] text-[oklch(0.88_0.19_95)] mb-2">Oferta única · só agora</div>
           <div className="font-display text-3xl md:text-4xl leading-tight">
-            {phase === "offer" ? (
-              <>
-                Acesso na ÍNTEGRA ao filme<br/>
-                <span className="text-[oklch(0.88_0.19_95)]">DARK HORSE</span> completo
-              </>
-            ) : (
-              <>Pague com Pix (Dark Horse)</>
-            )}
+            {phase === "offer" ? content.titleOffer : content.titlePix}
           </div>
         </div>
 
         {phase === "offer" && (
           <div className="p-6 space-y-4">
             <p className="text-sm text-muted-foreground text-center leading-relaxed">
-              O documentário que a grande mídia não quis que você visse. Filme completo, sem cortes, em alta definição. Acesso vitalício imediato.
+              {content.desc}
             </p>
 
             <ul className="space-y-2.5 text-sm">
-              {[
-                "Filme completo em alta definição (HD)",
-                "Conteúdo exclusivo: entrevistas censuradas",
-                "Acesso vitalício, assista quando e onde quiser",
-              ].map((i) => (
+              {content.features.map((i) => (
                 <li key={i} className="flex items-start gap-2">
                   <Check className="w-5 h-5 text-[oklch(0.52_0.16_145)] flex-shrink-0 mt-0.5" />
                   <span className="text-foreground font-medium">{i}</span>
@@ -1291,10 +1336,10 @@ function UpsellModal({
               ) : (
                 <Sparkles className="w-5 h-5" />
               )}
-              {loading ? "Gerando Pix do Dark Horse..." : "SIM, QUERO O DARK HORSE!"}
+              {loading ? content.btnLoadingLabel : content.btnLabel}
             </button>
             
-            <button onClick={onClose} className="w-full text-xs text-muted-foreground hover:text-foreground py-2 font-medium cursor-pointer">
+            <button onClick={() => onClose(false)} className="w-full text-xs text-muted-foreground hover:text-foreground py-2 font-medium cursor-pointer">
               Não, obrigado. Recusar oferta e ir para minha foto.
             </button>
           </div>
@@ -1406,7 +1451,7 @@ function UpsellModal({
                 onClick={simulateSuccess}
                 className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 text-xs shadow-md shadow-amber-500/20 cursor-pointer animate-pulse transition active:scale-98"
               >
-                ⚡ Simular Pagamento Aprovado (R$ 27)
+                {content.simulatedLabel}
               </button>
             )}
 
