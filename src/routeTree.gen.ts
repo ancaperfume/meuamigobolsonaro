@@ -10,33 +10,44 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiPublicNexuspagWebhookRouteImport } from './routes/api/public/nexuspag-webhook'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicNexuspagWebhookRoute =
+  ApiPublicNexuspagWebhookRouteImport.update({
+    id: '/api/public/nexuspag-webhook',
+    path: '/api/public/nexuspag-webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/api/public/nexuspag-webhook': typeof ApiPublicNexuspagWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/api/public/nexuspag-webhook': typeof ApiPublicNexuspagWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/api/public/nexuspag-webhook': typeof ApiPublicNexuspagWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/api/public/nexuspag-webhook'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/api/public/nexuspag-webhook'
+  id: '__root__' | '/' | '/api/public/nexuspag-webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ApiPublicNexuspagWebhookRoute: typeof ApiPublicNexuspagWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,12 +59,30 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/nexuspag-webhook': {
+      id: '/api/public/nexuspag-webhook'
+      path: '/api/public/nexuspag-webhook'
+      fullPath: '/api/public/nexuspag-webhook'
+      preLoaderRoute: typeof ApiPublicNexuspagWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ApiPublicNexuspagWebhookRoute: ApiPublicNexuspagWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
