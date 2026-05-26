@@ -37,8 +37,9 @@ export const createPixCharge = createServerFn({ method: "POST" })
       });
       insertErr = res.error;
 
-      if (insertErr && insertErr.code === "42703") {
-        console.warn("ip_address column missing in orders table, retrying insert without it");
+      // If ANY error occurs on the first insert, try to insert without ip_address as a robust fallback
+      if (insertErr) {
+        console.warn("First orders insert failed, retrying insert without ip_address:", insertErr.message);
         const fallbackRes = await supabaseAdmin.from("orders").insert({
           external_id: externalId,
           amount: data.amount,
