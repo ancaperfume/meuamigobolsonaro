@@ -57,13 +57,38 @@ export const createPixCharge = createServerFn({ method: "POST" })
 
     const json: any = await resp.json();
 
-    // The API may return fields under different names — be defensive.
+    // The API may return fields under different names or nested under 'data' / 'pix' — be highly defensive.
+    const nestedData = json.data ?? json.pix ?? json;
+    
     const qrCode: string =
-      json.qr_code ?? json.qrcode ?? json.brcode ?? json.pix_code ?? json.copy_paste ?? "";
+      nestedData.qr_code ?? 
+      nestedData.qrcode ?? 
+      nestedData.brcode ?? 
+      nestedData.pix_code ?? 
+      nestedData.copy_paste ?? 
+      nestedData.pixCopiaCola ?? 
+      nestedData.emv ?? 
+      json.qr_code ?? 
+      json.qrcode ?? 
+      "";
+      
     const qrCodeImage: string =
-      json.qr_code_image ?? json.qrcode_image ?? json.qr_code_base64 ?? json.image ?? "";
+      nestedData.qr_code_image ?? 
+      nestedData.qrcode_image ?? 
+      nestedData.qr_code_base64 ?? 
+      nestedData.image ?? 
+      nestedData.pixQrCode ?? 
+      nestedData.base64 ?? 
+      json.qr_code_image ?? 
+      json.qrcode_image ?? 
+      "";
+      
     const nexuspagId: string | undefined =
-      json.id ?? json.transaction_id ?? json.txid ?? json.uuid;
+      nestedData.id ?? 
+      nestedData.transaction_id ?? 
+      nestedData.txid ?? 
+      nestedData.uuid ?? 
+      json.id;
 
     if (nexuspagId) {
       await supabaseAdmin
@@ -74,7 +99,7 @@ export const createPixCharge = createServerFn({ method: "POST" })
 
     if (!qrCode && !qrCodeImage) {
       console.error("NexusPag response missing QR fields", json);
-      throw new Error("Pix gerado mas QR Code não retornado.");
+      throw new Error(`Pix gerado mas QR Code não retornado. Retorno do gateway: ${JSON.stringify(json)}`);
     }
 
     return {
