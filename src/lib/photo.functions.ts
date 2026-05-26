@@ -43,7 +43,7 @@ SCENE COMPOSITION & STYLE:
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: "google/gemini-3.1-flash-image-preview",
+        model: "gemini-3.1-flash-image-preview",
         modalities: ["image", "text"],
         messages: [
           {
