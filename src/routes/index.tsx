@@ -97,6 +97,17 @@ function Index() {
   const [character, setCharacter] = useState<CharKey>("jair");
   const [step, setStep] = useState<Step>("idle");
   const [proof, setProof] = useState<typeof SOCIAL_PROOFS[0] | null>(null);
+  const [isDevMode, setIsDevMode] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("teste") === "true" || params.get("dev") === "true") {
+        setIsDevMode(true);
+        toast.info("Modo de Testes Ativado ⚡");
+      }
+    }
+  }, []);
 
   useEffect(() => {
     const showNextProof = () => {
@@ -338,18 +349,20 @@ function Index() {
               {step === "idle" && (
                 <div className="space-y-3">
                   <UploadButton onClick={() => fileRef.current?.click()} />
-                  <button
-                    onClick={() => {
-                      setOriginalPreview(c.example);
-                      setGeneratedUrl(c.example);
-                      setStep("preview");
-                      setShowPayment(true);
-                      toast.info("Geração simulada com sucesso! Checkout aberto.");
-                    }}
-                    className="w-full bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-dashed border-amber-500/30 font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition text-xs cursor-pointer"
-                  >
-                    ⚡ Testar/Simular Checkout Rápido
-                  </button>
+                  {isDevMode && (
+                    <button
+                      onClick={() => {
+                        setOriginalPreview(c.example);
+                        setGeneratedUrl(c.example);
+                        setStep("preview");
+                        setShowPayment(true);
+                        toast.info("Geração simulada com sucesso! Checkout aberto.");
+                      }}
+                      className="w-full bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-dashed border-amber-500/30 font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition text-xs cursor-pointer animate-pulse"
+                    >
+                      ⚡ Testar/Simular Checkout Rápido
+                    </button>
+                  )}
                 </div>
               )}
               {step === "preview" && (
@@ -625,9 +638,16 @@ function Index() {
           total={total}
           onClose={() => setShowPayment(false)}
           onPaid={handlePaid}
+          isDevMode={isDevMode}
         />
       )}
-      {showUpsell && <UpsellModal onClose={() => setShowUpsell(false)} />}
+      {showUpsell && (
+        <UpsellModal 
+          characterKey={character} 
+          isDevMode={isDevMode} 
+          onClose={() => setShowUpsell(false)} 
+        />
+      )}
     </div>
   );
 }
@@ -706,6 +726,7 @@ function PaymentModal({
   total,
   onClose,
   onPaid,
+  isDevMode,
 }: {
   character: string;
   characterKey: CharKey;
@@ -714,6 +735,7 @@ function PaymentModal({
   total: number;
   onClose: () => void;
   onPaid: () => void;
+  isDevMode: boolean;
 }) {
   const callCreate = useServerFn(createPixCharge);
   const callStatus = useServerFn(getOrderStatus);
@@ -1061,13 +1083,15 @@ function PaymentModal({
             </div>
 
             {/* SIMULAR CONFIRMAÇÃO DE PAGAMENTO E ENTREGA */}
-            <button
-              type="button"
-              onClick={onPaid}
-              className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 text-xs shadow-md shadow-amber-500/20 cursor-pointer animate-pulse-slow transition active:scale-98"
-            >
-              ⚡ Simular Confirmação e Entregar Imagem
-            </button>
+            {isDevMode && (
+              <button
+                type="button"
+                onClick={onPaid}
+                className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 text-xs shadow-md shadow-amber-500/20 cursor-pointer animate-pulse-slow transition active:scale-98"
+              >
+                ⚡ Simular Confirmação e Entregar Imagem
+              </button>
+            )}
 
             <div className="text-[10px] text-center text-muted-foreground font-medium">
               🔒 Liberação automática imediata. Não feche esta janela após pagar.
@@ -1110,53 +1134,287 @@ function OrderBump({
   );
 }
 
-function UpsellModal({ onClose }: { onClose: () => void }) {
+function UpsellModal({
+  characterKey,
+  isDevMode,
+  onClose,
+}: {
+  characterKey: CharKey;
+  isDevMode: boolean;
+  onClose: () => void;
+}) {
+  const callCreate = useServerFn(createPixCharge);
+  const callStatus = useServerFn(getOrderStatus);
+  const [phase, setPhase] = useState<"offer" | "pix">("offer");
+  const [loading, setLoading] = useState(false);
+  const [pix, setPix] = useState<{ externalId: string; qrCode: string; qrCodeImage: string } | null>(null);
+  const [timeLeft, setTimeLeft] = useState(600); // 10 minutes
+  const [copied, setCopied] = useState(false);
+  const [pixTab, setPixTab] = useState<"mobile" | "computer">("mobile");
+
+  useEffect(() => {
+    if (phase !== "pix" || timeLeft <= 0) return;
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => prev - 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [phase, timeLeft]);
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  // Poll order status
+  useEffect(() => {
+    if (phase !== "pix" || !pix) return;
+    let active = true;
+    const tick = async () => {
+      try {
+        const res = await callStatus({ data: { externalId: pix.externalId } });
+        if (active && res.status === "paid") {
+          toast.success("Pagamento do Dark Horse aprovado! Seu acesso foi liberado.");
+          // Trigger automatic download of the PDF document
+          const link = document.createElement("a");
+          link.href = "/downloads/dark-horse.pdf";
+          link.download = "dark-horse.pdf";
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          onClose();
+        }
+      } catch (e) {
+        // silent retry
+      }
+    };
+    const id = setInterval(tick, 3000);
+    return () => {
+      active = false;
+      clearInterval(id);
+    };
+  }, [phase, pix, callStatus, onClose]);
+
+  const handleBuy = async () => {
+    setLoading(true);
+    try {
+      const res = await callCreate({
+        data: {
+          amount: 27.00,
+          character: characterKey,
+          bumps: { oracoes: false, guia: false },
+        },
+      });
+      setPix(res);
+      setPhase("pix");
+      if (typeof window !== "undefined" && window.fbq) {
+        window.fbq("track", "InitiateCheckout", { value: 27.00, currency: "BRL" });
+      }
+    } catch (e: any) {
+      toast.error(e?.message ?? "Falha ao gerar o Pix do Dark Horse.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const copy = async (txt: string) => {
+    try {
+      await navigator.clipboard.writeText(txt);
+      setCopied(true);
+      toast.success("Código Pix copiado!");
+    } catch {
+      toast.error("Não foi possível copiar.");
+    }
+  };
+
+  const simulateSuccess = () => {
+    toast.success("Pagamento do Dark Horse aprovado com sucesso (Simulado)!");
+    const link = document.createElement("a");
+    link.href = "/downloads/dark-horse.pdf";
+    link.download = "dark-horse.pdf";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    onClose();
+  };
+
   return (
     <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
       <div className="bg-background rounded-2xl max-w-lg w-full my-8 shadow-2xl border-2 border-[oklch(0.88_0.19_95)] overflow-hidden">
         <div className="bg-gradient-to-br from-[oklch(0.28_0.13_265)] to-[oklch(0.18_0.04_145)] text-white px-6 py-8 text-center relative">
-          <button onClick={onClose} className="absolute top-3 right-3 opacity-70 hover:opacity-100"><X className="w-5 h-5" /></button>
+          <button onClick={onClose} className="absolute top-3 right-3 opacity-70 hover:opacity-100 cursor-pointer"><X className="w-5 h-5" /></button>
           <div className="text-xs uppercase tracking-[0.3em] text-[oklch(0.88_0.19_95)] mb-2">Oferta única · só agora</div>
           <div className="font-display text-3xl md:text-4xl leading-tight">
-            Acesso na ÍNTEGRA ao filme<br/>
-            <span className="text-[oklch(0.88_0.19_95)]">DARK HORSE</span> completo
+            {phase === "offer" ? (
+              <>
+                Acesso na ÍNTEGRA ao filme<br/>
+                <span className="text-[oklch(0.88_0.19_95)]">DARK HORSE</span> completo
+              </>
+            ) : (
+              <>Pague com Pix (Dark Horse)</>
+            )}
           </div>
         </div>
 
-        <div className="p-6 space-y-4">
-          <p className="text-sm text-muted-foreground text-center">
-            O documentário que a grande mídia não quis que você visse. Filme completo, sem cortes, em alta definição. Acesso vitalício.
-          </p>
+        {phase === "offer" && (
+          <div className="p-6 space-y-4">
+            <p className="text-sm text-muted-foreground text-center leading-relaxed">
+              O documentário que a grande mídia não quis que você visse. Filme completo, sem cortes, em alta definição. Acesso vitalício imediato.
+            </p>
 
-          <ul className="space-y-2 text-sm">
-            {[
-              "Filme completo, sem censura",
-              "Conteúdo extra: entrevistas exclusivas",
-              "Acesso vitalício, assista quando quiser",
-            ].map((i) => (
-              <li key={i} className="flex items-start gap-2">
-                <Check className="w-5 h-5 text-[oklch(0.52_0.16_145)] flex-shrink-0 mt-0.5" />
-                <span>{i}</span>
-              </li>
-            ))}
-          </ul>
+            <ul className="space-y-2.5 text-sm">
+              {[
+                "Filme completo em alta definição (HD)",
+                "Conteúdo exclusivo: entrevistas censuradas",
+                "Acesso vitalício, assista quando e onde quiser",
+              ].map((i) => (
+                <li key={i} className="flex items-start gap-2">
+                  <Check className="w-5 h-5 text-[oklch(0.52_0.16_145)] flex-shrink-0 mt-0.5" />
+                  <span className="text-foreground font-medium">{i}</span>
+                </li>
+              ))}
+            </ul>
 
-          <div className="bg-muted rounded-xl p-4 text-center">
-            <div className="text-xs text-muted-foreground line-through">De R$ 97,00</div>
-            <div className="font-display text-4xl text-[oklch(0.52_0.16_145)]">R$ 27,00</div>
-            <div className="text-xs text-muted-foreground">à vista, hoje apenas</div>
+            <div className="bg-muted rounded-xl p-4 text-center border border-border">
+              <div className="text-xs text-muted-foreground line-through font-semibold">De R$ 97,00</div>
+              <div className="font-display text-4xl text-[oklch(0.52_0.16_145)] font-bold">R$ 27,00</div>
+              <div className="text-xs text-muted-foreground font-medium">à vista, hoje apenas</div>
+            </div>
+
+            <button
+              onClick={handleBuy}
+              disabled={loading}
+              className="w-full bg-[oklch(0.88_0.19_95)] hover:bg-[oklch(0.82_0.19_95)] text-[oklch(0.18_0.04_145)] font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition cursor-pointer shadow-lg shadow-[oklch(0.88_0.19_95)]/20 active:scale-98"
+            >
+              {loading ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <Sparkles className="w-5 h-5" />
+              )}
+              {loading ? "Gerando Pix do Dark Horse..." : "SIM, QUERO O DARK HORSE!"}
+            </button>
+            
+            <button onClick={onClose} className="w-full text-xs text-muted-foreground hover:text-foreground py-2 font-medium cursor-pointer">
+              Não, obrigado. Recusar oferta e ir para minha foto.
+            </button>
           </div>
+        )}
 
-          <button
-            onClick={onClose}
-            className="w-full bg-[oklch(0.88_0.19_95)] hover:bg-[oklch(0.82_0.19_95)] text-[oklch(0.18_0.04_145)] font-bold py-4 rounded-xl flex items-center justify-center gap-2"
-          >
-            <Sparkles className="w-5 h-5" /> SIM, QUERO O DARK HORSE!
-          </button>
-          <button onClick={onClose} className="w-full text-xs text-muted-foreground hover:text-foreground py-2">
-            Não, obrigado. Recusar oferta e ir para minha foto.
-          </button>
-        </div>
+        {phase === "pix" && pix && (
+          <div className="p-6 space-y-5">
+            <div className="text-center">
+              <div className="text-sm text-muted-foreground font-semibold">Valor da Oferta</div>
+              <div className="font-display text-3xl text-[oklch(0.52_0.16_145)] font-bold">R$ 27,00</div>
+            </div>
+
+            <div className="bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 rounded-xl p-3 text-center text-xs font-semibold flex items-center justify-center gap-2">
+              <span className="animate-pulse text-sm">⚠️</span>
+              <span>Expira em: <span className="font-bold font-mono text-sm">{formatTime(timeLeft)}</span></span>
+            </div>
+
+            {/* ABA DE SELEÇÃO */}
+            <div className="grid grid-cols-2 gap-2 p-1 bg-muted rounded-lg border border-border">
+              <button
+                type="button"
+                onClick={() => setPixTab("mobile")}
+                className={`py-2 px-3 rounded-md text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer ${
+                  pixTab === "mobile"
+                    ? "bg-background text-foreground shadow-sm border border-border"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Smartphone className="w-4 h-4 text-[oklch(0.52_0.16_145)]" />
+                Pagar no Celular
+              </button>
+              <button
+                type="button"
+                onClick={() => setPixTab("computer")}
+                className={`py-2 px-3 rounded-md text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer ${
+                  pixTab === "computer"
+                    ? "bg-background text-foreground shadow-sm border border-border"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Monitor className="w-4 h-4 text-primary" />
+                Pagar no Computador
+              </button>
+            </div>
+
+            {/* CONTEÚDO CELULAR */}
+            {pixTab === "mobile" && (
+              <div className="space-y-4">
+                {pix.qrCode && (
+                  <div className="space-y-3">
+                    <button
+                      onClick={() => copy(pix.qrCode)}
+                      className={`w-full py-4 px-4 rounded-2xl flex flex-col items-center justify-center gap-1.5 transition-all shadow-lg active:scale-98 cursor-pointer ${
+                        copied
+                          ? "bg-emerald-600 hover:bg-emerald-700 text-white ring-4 ring-emerald-600/30"
+                          : "bg-[oklch(0.52_0.16_145)] hover:bg-[oklch(0.45_0.16_145)] text-white border-2 border-yellow-400 shadow-[oklch(0.52_0.16_145)]/20 animate-pulse-slow"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 font-display text-base font-bold">
+                        {copied ? <Check className="w-5 h-5 animate-bounce" /> : <Copy className="w-4.5 h-4.5" />}
+                        {copied ? "CÓDIGO COPIADO COM SUCESSO!" : "1. CLIQUE AQUI PARA COPIAR O PIX"}
+                      </div>
+                    </button>
+
+                    {copied && (
+                      <div className="bg-emerald-500/10 border-2 border-emerald-500 text-emerald-800 dark:text-emerald-300 rounded-xl p-3.5 space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-300">
+                        <div className="flex items-center gap-2 font-bold text-sm">
+                          <CheckCircle2 className="w-4.5 h-4.5 text-emerald-600 dark:text-emerald-400" />
+                          <span>✅ PIX COPIADO!</span>
+                        </div>
+                        <p className="text-[11px] font-semibold leading-relaxed">
+                          Agora abra o aplicativo do seu banco, escolha Pix Copia e Cola, cole o código e confirme!
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* CONTEÚDO COMPUTADOR */}
+            {pixTab === "computer" && (
+              <div className="space-y-4 text-center">
+                <p className="text-[11px] text-muted-foreground font-medium max-w-sm mx-auto">
+                  Aponte a câmera do celular para ler o QR Code abaixo no Pix do seu app:
+                </p>
+
+                {pix.qrCodeImage && (
+                  <div className="flex justify-center">
+                    <img
+                      src={pix.qrCodeImage.startsWith("data:") ? pix.qrCodeImage : `data:image/png;base64,${pix.qrCodeImage}`}
+                      alt="QR Code Pix"
+                      className="w-44 h-44 rounded-lg border-2 border-border bg-white p-1"
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground py-2 border-t border-border pt-4">
+              <Loader2 className="w-4.5 h-4.5 animate-spin text-[oklch(0.52_0.16_145)]" />
+              <span className="font-semibold animate-pulse">Aguardando confirmação do pagamento…</span>
+            </div>
+
+            {/* SIMULAÇÃO DE PAGAMENTO DO UPSELL */}
+            {isDevMode && (
+              <button
+                type="button"
+                onClick={simulateSuccess}
+                className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 text-xs shadow-md shadow-amber-500/20 cursor-pointer animate-pulse transition active:scale-98"
+              >
+                ⚡ Simular Pagamento Aprovado (R$ 27)
+              </button>
+            )}
+
+            <div className="text-[10px] text-center text-muted-foreground font-medium">
+              🔒 Liberação e download automático imediato. Não feche essa tela.
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
