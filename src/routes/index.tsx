@@ -177,7 +177,7 @@ function Index() {
 
       {/* TOP RIBBON */}
       <div className="w-full bg-[oklch(0.52_0.16_145)] text-[oklch(0.985_0.012_95)] text-xs tracking-[0.18em] uppercase py-2 text-center font-medium">
-        🇧🇷 Ordem e Progresso · Pagamento 100% seguro · Entrega imediata
+        🇧🇷 Ordem e Progresso · Pagamento 100% seguro · Entrega imediata 🚀
       </div>
 
       {/* HEADER */}
