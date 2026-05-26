@@ -2,9 +2,16 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { generatePhoto } from "@/lib/photo.functions";
+import { createPixCharge, getOrderStatus } from "@/lib/payment.functions";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
-import { Loader2, Upload, Lock, Check, ShieldCheck, Heart, Sparkles, X } from "lucide-react";
+import { Loader2, Upload, Lock, Check, ShieldCheck, Heart, Sparkles, X, Copy } from "lucide-react";
+
+declare global {
+  interface Window {
+    fbq?: (...args: any[]) => void;
+  }
+}
 
 import exampleJair from "@/assets/example-jair.jpg";
 import exampleFlavio from "@/assets/example-flavio.jpg";
