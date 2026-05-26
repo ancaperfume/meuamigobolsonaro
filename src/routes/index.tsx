@@ -185,7 +185,7 @@ function Index() {
         <div className="flex items-center gap-3">
           <BrasilFlag className="w-9 h-6" />
           <div className="leading-tight">
-            <div className="font-display text-2xl">bolsonaro meu amigo</div>
+            <div className="font-display text-2xl">bolsonaro meu amigo 🇧🇷</div>
             <div className="text-[11px] uppercase tracking-[0.25em] text-muted-foreground">sua foto, sua história</div>
           </div>
         </div>
