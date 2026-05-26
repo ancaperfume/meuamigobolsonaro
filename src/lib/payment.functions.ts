@@ -15,7 +15,7 @@ export const createPixCharge = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => createInput.parse(data))
   .handler(async ({ data }) => {
     const apiKey = process.env.NEXUSPAG_API_KEY;
-    if (!apiKey) throw new Error("NEXUSPAG_API_KEY missing");
+    if (!apiKey) throw new Error("Chave NEXUSPAG_API_KEY ausente nas variáveis de ambiente da Lovable.");
 
     const externalId = `bma-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
@@ -28,7 +28,7 @@ export const createPixCharge = createServerFn({ method: "POST" })
     });
     if (insertErr) {
       console.error("orders insert error", insertErr);
-      throw new Error("Não foi possível criar o pedido.");
+      throw new Error(`Erro ao registrar pedido no Supabase: ${insertErr.message} (${insertErr.details || insertErr.hint || ""})`);
     }
 
     const origin =
@@ -52,7 +52,7 @@ export const createPixCharge = createServerFn({ method: "POST" })
     if (!resp.ok) {
       const txt = await resp.text();
       console.error("NexusPag error", resp.status, txt);
-      throw new Error("Falha ao gerar o Pix. Tente novamente.");
+      throw new Error(`Falha no Gateway NexusPag (Status ${resp.status}): ${txt}`);
     }
 
     const json: any = await resp.json();

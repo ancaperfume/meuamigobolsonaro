@@ -26,6 +26,7 @@ export const generatePhoto = createServerFn({ method: "POST" })
 2. Under no circumstances should you redraw, alter, or beautify the people's faces. Keep their identities 100% identical and high-fidelity to the source image.
 3. If there is one person in the photo, place that exact person naturally standing next to ${character}.
 4. If there are multiple people in the photo, keep ALL of them in the scene, preserving their positions, and place them as a group posing naturally together next to ${character}.
+5. The politician (${character}) MUST be fully and clearly visible in the image, standing prominently side-by-side with the user(s). Their face and body should not be cut off, obstructed, or partially hidden. They must be a primary and highly recognizable subject of the photo.
 
 SCENE COMPOSITION & STYLE:
 - The result must look like a high-quality, realistic, casual smartphone selfie where everyone is friends posing together.
