@@ -17,8 +17,8 @@ const characterPrompts: Record<string, string> = {
 export const generatePhoto = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => inputSchema.parse(data))
   .handler(async ({ data }) => {
-    const apiKey = process.env.GEMINI_API_KEY || "AIzaSyD6k_z2lFpsS-KyEvLLx8f7qktiVp9yulc";
-    if (!apiKey) throw new Error("GEMINI_API_KEY missing");
+    const apiKey = process.env.OPENROUTER_API_KEY;
+    if (!apiKey) throw new Error("A chave OPENROUTER_API_KEY não foi configurada nas variáveis de ambiente da Lovable.");
 
     const character = characterPrompts[data.character];
     const prompt = `CRITICAL IDENTITY PRESERVATION RULES:
@@ -36,14 +36,16 @@ SCENE COMPOSITION & STYLE:
 - The background should be a cozy, realistic setting (such as a modern Brazilian home living room, a veranda, or an outdoor garden).
 - Output a single realistic, coherent, and highly convincing photo.`;
 
-    const resp = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
+    const resp = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${apiKey}`,
+        "HTTP-Referer": "https://lovable.dev",
+        "X-Title": "Meu Amigo Bolsonaro",
       },
       body: JSON.stringify({
-        model: "gemini-3.1-flash-image-preview",
+        model: "google/gemini-3.1-flash-image-preview",
         modalities: ["image", "text"],
         messages: [
           {
