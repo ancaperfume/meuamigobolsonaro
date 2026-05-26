@@ -82,9 +82,37 @@ const CHARACTERS: Record<CharKey, {
 type Step = "idle" | "generating" | "preview" | "paid";
 type PaidBumps = { oracoes: boolean; guia: boolean };
 
+const SOCIAL_PROOFS = [
+  { name: "José", city: "Campinas/SP", action: "baixou sua foto com o Mito" },
+  { name: "Maria", city: "Goiânia/GO", action: "liberou sua foto com a Michelle" },
+  { name: "Thiago", city: "Joinville/SC", action: "gerou uma foto com o Nikolas" },
+  { name: "Carlos", city: "Brasília/DF", action: "baixou a foto com o Capitão" },
+  { name: "Ana Paula", city: "Belo Horizonte/MG", action: "liberou a foto com o Mito" },
+  { name: "Marcos", city: "Curitiba/PR", action: "gerou uma foto com o Senador Flávio" },
+  { name: "Renato", city: "Ribeirão Preto/SP", action: "baixou sua foto com o Mito" },
+  { name: "Letícia", city: "Porto Alegre/RS", action: "liberou a foto com a Michelle" },
+];
+
 function Index() {
   const [character, setCharacter] = useState<CharKey>("jair");
   const [step, setStep] = useState<Step>("idle");
+  const [proof, setProof] = useState<typeof SOCIAL_PROOFS[0] | null>(null);
+
+  useEffect(() => {
+    const showNextProof = () => {
+      const randomProof = SOCIAL_PROOFS[Math.floor(Math.random() * SOCIAL_PROOFS.length)];
+      setProof(randomProof);
+      setTimeout(() => setProof(null), 4000);
+    };
+
+    const interval = setInterval(showNextProof, 15000);
+    const initialTimeout = setTimeout(showNextProof, 4000);
+
+    return () => {
+      clearInterval(interval);
+      clearTimeout(initialTimeout);
+    };
+  }, []);
   const [generatedUrl, setGeneratedUrl] = useState<string | null>(null);
   const [originalPreview, setOriginalPreview] = useState<string | null>(null);
   const [showPayment, setShowPayment] = useState(false);
@@ -381,6 +409,19 @@ function Index() {
         </footer>
       </main>
 
+      {/* SOCIAL PROOF FLOAT POPUP */}
+      {proof && (
+        <div className="fixed bottom-24 md:bottom-6 left-4 z-50 max-w-xs bg-card/95 border border-border backdrop-blur-md p-3.5 rounded-2xl shadow-xl flex items-center gap-3 animate-in slide-in-from-left-5 duration-300">
+          <div className="w-8 h-8 rounded-full bg-[oklch(0.88_0.19_95)] flex items-center justify-center text-sm font-bold text-[oklch(0.18_0.04_145)] flex-shrink-0">
+            🇧🇷
+          </div>
+          <div className="text-[11px] leading-tight">
+            <div className="font-bold text-foreground">{proof.name} ({proof.city})</div>
+            <div className="text-muted-foreground mt-0.5">{proof.action} há poucos segundos</div>
+          </div>
+        </div>
+      )}
+
       {/* STICKY BOTTOM MOBILE CTA */}
       {step !== "generating" && (
         <div className="fixed bottom-0 left-0 right-0 z-40 p-4 bg-background/95 backdrop-blur-md border-t border-border md:hidden flex items-center justify-between gap-3 shadow-[0_-8px_30px_rgb(0,0,0,0.08)]">
@@ -473,13 +514,19 @@ function CharacterSwitcher({ value, onChange }: { value: CharKey; onChange: (k: 
 
 function UploadButton({ onClick }: { onClick: () => void }) {
   return (
-    <button
-      onClick={onClick}
-      className="w-full bg-[oklch(0.52_0.16_145)] hover:bg-[oklch(0.45_0.16_145)] text-white font-bold py-5 rounded-xl flex items-center justify-center gap-3 transition shadow-xl shadow-[oklch(0.52_0.16_145)]/30 group"
-    >
-      <Upload className="w-5 h-5 group-hover:-translate-y-0.5 transition" />
-      Enviar minha foto agora
-    </button>
+    <div className="w-full">
+      <button
+        onClick={onClick}
+        className="w-full bg-[oklch(0.52_0.16_145)] hover:bg-[oklch(0.45_0.16_145)] text-white font-bold py-5 rounded-xl flex items-center justify-center gap-3 transition shadow-xl shadow-[oklch(0.52_0.16_145)]/30 group"
+      >
+        <Upload className="w-5 h-5 group-hover:-translate-y-0.5 transition" />
+        Enviar minha foto agora
+      </button>
+      <div className="text-xs text-center text-muted-foreground mt-2.5 font-medium flex items-center justify-center gap-1">
+        <Sparkles className="w-3.5 h-3.5 text-[oklch(0.52_0.16_145)] animate-pulse" />
+        <span>Ver prévia grátis em 15s (IA Premium Ativa)</span>
+      </div>
+    </div>
   );
 }
 
@@ -528,6 +575,21 @@ function PaymentModal({
   const [phase, setPhase] = useState<"cart" | "pix">("cart");
   const [loading, setLoading] = useState(false);
   const [pix, setPix] = useState<{ externalId: string; qrCode: string; qrCodeImage: string } | null>(null);
+  const [timeLeft, setTimeLeft] = useState(600); // 10 minutes
+
+  useEffect(() => {
+    if (phase !== "pix" || timeLeft <= 0) return;
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => prev - 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [phase, timeLeft]);
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  };
 
   // Poll order status every 3s while in pix phase
   useEffect(() => {
@@ -598,7 +660,10 @@ function PaymentModal({
                 <div className="font-semibold">Foto com {character}</div>
                 <div className="text-xs text-muted-foreground">Versão HD sem marca d'água</div>
               </div>
-              <div className="font-semibold">R$ 6,22</div>
+              <div className="font-semibold text-right">
+                <span className="text-xs text-muted-foreground line-through mr-2">R$ 19,90</span>
+                <span className="text-[oklch(0.52_0.16_145)]">R$ 6,22</span>
+              </div>
             </div>
 
             <div className="text-xs uppercase tracking-wider text-muted-foreground font-semibold pt-2">
@@ -622,8 +687,27 @@ function PaymentModal({
             />
 
             <div className="bg-muted rounded-xl p-4 flex items-center justify-between">
-              <div className="text-sm text-muted-foreground">Total</div>
-              <div className="font-display text-3xl">R$ {total.toFixed(2).replace(".", ",")}</div>
+              <div className="text-sm text-muted-foreground">Total com desconto especial</div>
+              <div className="text-right">
+                <span className="text-xs text-muted-foreground line-through block leading-none mb-1">R$ 19,90</span>
+                <span className="font-display text-3xl">R$ {total.toFixed(2).replace(".", ",")}</span>
+              </div>
+            </div>
+
+            {/* TRUST BADGES */}
+            <div className="grid grid-cols-3 gap-2 py-3 border-t border-b border-border text-[9px] text-center text-muted-foreground uppercase tracking-wider font-semibold">
+              <div className="flex flex-col items-center gap-1.5">
+                <ShieldCheck className="w-4 h-4 text-[oklch(0.52_0.16_145)]" />
+                <span>Compra Protegida</span>
+              </div>
+              <div className="flex flex-col items-center gap-1.5">
+                <Check className="w-4 h-4 text-[oklch(0.52_0.16_145)]" />
+                <span>Entrega Imediata</span>
+              </div>
+              <div className="flex flex-col items-center gap-1.5">
+                <Sparkles className="w-4 h-4 text-[oklch(0.52_0.16_145)]" />
+                <span>IA Ultra Realista</span>
+              </div>
             </div>
 
             <button
@@ -636,7 +720,7 @@ function PaymentModal({
             </button>
 
             <div className="text-[11px] text-center text-muted-foreground">
-              🔒 Pagamento processado pela NexusPag
+              🔒 Processado com segurança pela NexusPag
             </div>
           </div>
         )}
@@ -646,6 +730,11 @@ function PaymentModal({
             <div className="text-center">
               <div className="text-sm text-muted-foreground">Total a pagar</div>
               <div className="font-display text-3xl">R$ {total.toFixed(2).replace(".", ",")}</div>
+            </div>
+
+            <div className="bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 rounded-xl p-3 text-center text-xs font-medium flex items-center justify-center gap-2">
+              <span className="animate-pulse">⚠️</span>
+              <span>O seu Pix promocional expira em <span className="font-bold font-mono">{formatTime(timeLeft)}</span> minutos.</span>
             </div>
 
             {pix.qrCodeImage && (
