@@ -159,13 +159,17 @@ function Index() {
     setPaidBumps({ oracoes: false, guia: false });
   };
 
-  const simulatePayment = () => {
+  const handlePaid = useCallback(() => {
     setShowPayment(false);
     setPaidBumps(bumps);
     setStep("paid");
     setTimeout(() => setShowUpsell(true), 600);
     toast.success("Pagamento aprovado! Seus itens foram liberados.");
-  };
+    // Meta Pixel — Purchase event
+    if (typeof window !== "undefined" && window.fbq) {
+      window.fbq("track", "Purchase", { value: total, currency: "BRL" });
+    }
+  }, [bumps, total]);
 
   return (
     <div className="min-h-screen bg-background bg-parchment">
