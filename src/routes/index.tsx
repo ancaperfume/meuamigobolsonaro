@@ -382,7 +382,7 @@ function Index() {
           setBumps={setBumps}
           total={total}
           onClose={() => setShowPayment(false)}
-          onPay={simulatePayment}
+          onPaid={handlePaid}
         />
       )}
       {showUpsell && <UpsellModal onClose={() => setShowUpsell(false)} />}
