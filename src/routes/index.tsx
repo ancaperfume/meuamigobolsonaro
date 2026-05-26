@@ -311,7 +311,21 @@ function Index() {
             {/* CTA Area */}
             <div className="mt-6">
               {step === "idle" && (
-                <UploadButton onClick={() => fileRef.current?.click()} />
+                <div className="space-y-3">
+                  <UploadButton onClick={() => fileRef.current?.click()} />
+                  <button
+                    onClick={() => {
+                      setOriginalPreview(c.example);
+                      setGeneratedUrl(c.example);
+                      setStep("preview");
+                      setShowPayment(true);
+                      toast.info("Geração simulada com sucesso! Checkout aberto.");
+                    }}
+                    className="w-full bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-dashed border-amber-500/30 font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition text-xs cursor-pointer"
+                  >
+                    ⚡ Testar/Simular Checkout Rápido
+                  </button>
+                </div>
               )}
               {step === "preview" && (
                 <div className="space-y-3">

@@ -25,14 +25,41 @@ export const createPixCharge = createServerFn({ method: "POST" })
 
     const externalId = `bma-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
-    const { error: insertErr } = await supabaseAdmin.from("orders").insert({
-      external_id: externalId,
-      amount: data.amount,
-      status: "pending",
-      character: data.character,
-      bumps: data.bumps,
-      ip_address: ipAddress,
-    });
+    let insertErr: any = null;
+    try {
+      const res = await supabaseAdmin.from("orders").insert({
+        external_id: externalId,
+        amount: data.amount,
+        status: "pending",
+        character: data.character,
+        bumps: data.bumps,
+        ip_address: ipAddress,
+      });
+      insertErr = res.error;
+
+      if (insertErr && insertErr.code === "42703") {
+        console.warn("ip_address column missing in orders table, retrying insert without it");
+        const fallbackRes = await supabaseAdmin.from("orders").insert({
+          external_id: externalId,
+          amount: data.amount,
+          status: "pending",
+          character: data.character,
+          bumps: data.bumps,
+        });
+        insertErr = fallbackRes.error;
+      }
+    } catch (e: any) {
+      console.warn("Supabase orders insert failed with exception, retrying fallback", e);
+      const fallbackRes = await supabaseAdmin.from("orders").insert({
+        external_id: externalId,
+        amount: data.amount,
+        status: "pending",
+        character: data.character,
+        bumps: data.bumps,
+      });
+      insertErr = fallbackRes.error;
+    }
+
     if (insertErr) {
       console.error("orders insert error", insertErr);
       throw new Error(`Erro ao registrar pedido no Supabase: ${insertErr.message} (${insertErr.details || insertErr.hint || ""})`);

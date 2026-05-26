@@ -27,23 +27,45 @@ export const generatePhoto = createServerFn({ method: "POST" })
 
     // 🛡️ ABUSE PROTECTION: Max 3 free previews in 24h unless they completed a payment
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-    const { count: genCount } = await supabaseAdmin
-      .from("generations")
-      .select("*", { count: "exact", head: true })
-      .eq("ip_address", ipAddress)
-      .gte("created_at", oneDayAgo);
+    let genCount = 0;
+    let paidCount = 0;
 
-    if (genCount && genCount >= 3) {
-      // Check if they have at least one paid order associated with this IP
-      const { count: paidCount } = await supabaseAdmin
-        .from("orders")
+    try {
+      const { count, error } = await supabaseAdmin
+        .from("generations")
         .select("*", { count: "exact", head: true })
         .eq("ip_address", ipAddress)
-        .eq("status", "paid");
+        .gte("created_at", oneDayAgo);
 
-      if (!paidCount || paidCount === 0) {
-        throw new Error("Você atingiu o limite de 3 fotos gratuitas. Por favor, conclua o pagamento de uma de suas fotos geradas no celular para continuar criando novas!");
+      if (!error && count !== null) {
+        genCount = count;
+      } else if (error) {
+        console.warn("Generations query failed (table probably doesn't exist yet):", error.message);
       }
+
+      if (genCount >= 3) {
+        const { count: paid, error: paidErr } = await supabaseAdmin
+          .from("orders")
+          .select("*", { count: "exact", head: true })
+          .eq("ip_address", ipAddress)
+          .eq("status", "paid");
+
+        if (!paidErr && paid !== null) {
+          paidCount = paid;
+        } else if (paidErr && paidErr.code === "42703") {
+          console.warn("ip_address column missing in orders table, skipping restriction");
+          paidCount = 1; // Treat as paid to allow flow to continue
+        } else if (paidErr) {
+          console.warn("Paid count query failed:", paidErr.message);
+        }
+      }
+    } catch (dbErr) {
+      console.warn("Database rate limiting check failed with exception, allowing request to proceed:", dbErr);
+      genCount = 0; // Skip restriction on database failure
+    }
+
+    if (genCount >= 3 && paidCount === 0) {
+      throw new Error("Você atingiu o limite de 3 fotos gratuitas. Por favor, conclua o pagamento de uma de suas fotos geradas no celular para continuar criando novas!");
     }
 
     // Obfuscated OpenRouter key to prevent GitHub secret scanner block
