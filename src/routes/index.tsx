@@ -330,7 +330,7 @@ function Index() {
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[oklch(0.88_0.19_95)] text-[oklch(0.18_0.04_145)] text-xs font-semibold uppercase tracking-wider mb-5">
               <Sparkles className="w-3.5 h-3.5" /> {c.tagline}
             </div>
-            <h1 className="font-display text-5xl md:text-6xl leading-[1.02] mb-5">
+            <h1 className="font-display text-3xl xs:text-4xl sm:text-5xl md:text-6xl leading-[1.02] mb-5">
               {c.headline}
             </h1>
             <p className="text-lg text-muted-foreground mb-8 max-w-md">
@@ -368,7 +368,7 @@ function Index() {
               )}
 
               {step === "generating" && (
-                <div className="absolute inset-0 flex flex-col items-center justify-between bg-card text-foreground overflow-hidden">
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-card text-foreground overflow-hidden">
                   <style dangerouslySetInnerHTML={{__html: `
                     @keyframes scanner-sweep {
                       0% { transform: translateY(0); }
@@ -413,7 +413,7 @@ function Index() {
                       <img 
                         src={originalPreview} 
                         alt="Sua foto de entrada" 
-                        className="w-full h-full object-cover blur-sm brightness-[0.4]" 
+                        className="w-full h-full object-cover blur-[5px] brightness-[0.4]" 
                       />
                     ) : (
                       <div className="w-full h-full bg-slate-950/80" />
@@ -425,65 +425,19 @@ function Index() {
                   <div className="absolute inset-0 pointer-events-none border border-white/10 rounded-2xl z-10 flex flex-col justify-between p-4">
                     <div className="flex justify-between items-center text-[10px] text-emerald-400 font-mono tracking-wider bg-black/40 backdrop-blur px-2.5 py-1 rounded-full border border-emerald-500/20 self-start">
                       <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping mr-2" />
-                      SISTEMA DE PROCESSAMENTO IA ONLINE
-                    </div>
-                    <div className="text-[10px] text-yellow-400 font-mono tracking-wider bg-black/40 backdrop-blur px-2.5 py-1 rounded-full border border-yellow-500/20 self-end">
-                      MODELO: MEU-AMIGO-v3.0.2
+                      PROCESSANDO FACE
                     </div>
                   </div>
 
-                  {/* MAIN CONTENT LAYER */}
-                  <div className="relative z-30 flex flex-col items-center justify-between w-full h-full p-6 text-center">
-                    {/* Top spacing / or tiny logo */}
-                    <div className="flex items-center gap-1.5 bg-black/30 backdrop-blur px-3 py-1.5 rounded-full border border-white/5">
-                      <Sparkles className="w-3.5 h-3.5 text-yellow-400 animate-pulse" />
-                      <span className="text-[10px] font-bold text-white uppercase tracking-widest">Criando Montagem Ultra-Realista</span>
+                  {/* CENTRAL SCANNER HUD */}
+                  <div className="relative z-30 flex flex-col items-center gap-3 bg-black/55 backdrop-blur-md border border-white/10 rounded-2xl p-5 text-center shadow-lg">
+                    <div className="relative w-16 h-16 flex items-center justify-center">
+                      <div className="absolute inset-0 rounded-full border-4 border-emerald-500/20 border-t-emerald-500 animate-spin" />
+                      <Loader2 className="w-8 h-8 animate-spin text-yellow-400 opacity-80 absolute" />
                     </div>
-
-                    {/* Middle status section */}
-                    <div className="w-full max-w-sm space-y-6 my-auto">
-                      <div className="flex flex-col items-center gap-2">
-                        {/* Animated Spinner with Custom Style */}
-                        <div className="relative w-16 h-16 flex items-center justify-center">
-                          <div className="absolute inset-0 rounded-full border-4 border-emerald-500/20 border-t-emerald-500 animate-spin" />
-                          <Loader2 className="w-8 h-8 animate-spin text-yellow-400 opacity-80 absolute" />
-                        </div>
-                        <div className="font-display text-2xl md:text-3xl text-white drop-shadow font-semibold">
-                          {progress}%
-                        </div>
-                      </div>
-
-                      {/* Linear Progress Bar */}
-                      <div className="space-y-2">
-                        <div className="w-full h-3 bg-white/10 rounded-full overflow-hidden border border-white/10 shadow-inner p-[2px]">
-                          <div 
-                            className="h-full bg-gradient-to-r from-yellow-400 via-emerald-500 to-yellow-400 rounded-full transition-all duration-300 ease-out" 
-                            style={{ width: `${progress}%` }}
-                          />
-                        </div>
-                        <div className="flex justify-between text-[10px] text-gray-300 font-mono font-bold px-1 uppercase tracking-wider">
-                          <span>Início</span>
-                          <span className="pulse-soft text-yellow-300">Processando...</span>
-                          <span>Pronto</span>
-                        </div>
-                      </div>
-
-                      {/* Dynamic Stepper Logs */}
-                      <div className="bg-black/55 backdrop-blur-md border border-white/10 rounded-xl p-4 min-h-[72px] flex items-center justify-center transition-all duration-500">
-                        <p className="text-sm md:text-base text-gray-100 font-medium leading-relaxed animate-pulse">
-                          {getGenerationLogs(c.short)[logIndex]}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Bottom Retention Banner */}
-                    <div className="w-full max-w-sm bg-gradient-to-r from-emerald-950/80 to-yellow-950/80 backdrop-blur-sm border border-emerald-500/20 rounded-xl p-3 shadow-lg flex items-center gap-3 text-left">
-                      <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center text-yellow-400 flex-shrink-0">
-                        <ShieldCheck className="w-5 h-5 text-yellow-300" />
-                      </div>
-                      <div className="text-[11px] leading-relaxed text-gray-200">
-                        {RETENTION_TIPS[tipIndex]}
-                      </div>
+                    <div className="font-mono text-[9px] text-emerald-400 uppercase tracking-widest font-bold animate-pulse">Alinhando Traços IA</div>
+                    <div className="font-display text-3xl text-white font-extrabold leading-none">
+                      {progress}%
                     </div>
                   </div>
                 </div>
@@ -828,16 +782,16 @@ function Index() {
 function CharacterSwitcher({ value, onChange }: { value: CharKey; onChange: (k: CharKey) => void }) {
   return (
     <div className="flex justify-center">
-      <div className="inline-flex items-center gap-1 p-1 rounded-full bg-card border border-border shadow-sm">
+      <div className="inline-flex items-center gap-0.5 sm:gap-1 p-1 rounded-full bg-card border border-border shadow-sm max-w-full overflow-x-auto no-scrollbar">
         {(Object.keys(CHARACTERS) as CharKey[]).map((key) => {
           const active = value === key;
           return (
             <button
               key={key}
               onClick={() => onChange(key)}
-              className={`px-4 md:px-5 py-2 rounded-full text-sm font-medium transition ${
+              className={`px-2.5 sm:px-4 md:px-5 py-1.5 md:py-2 rounded-full text-xs sm:text-sm font-semibold transition flex-shrink-0 ${
                 active
-                  ? "bg-[oklch(0.18_0.04_145)] text-[oklch(0.985_0.012_95)]"
+                  ? "bg-[oklch(0.18_0.04_145)] text-[oklch(0.985_0.012_95)] shadow-sm"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -988,289 +942,291 @@ function PaymentModal({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-      <div className="bg-background rounded-2xl max-w-lg w-full my-8 shadow-2xl border border-border overflow-hidden">
-        <div className="bg-[oklch(0.52_0.16_145)] text-white px-6 py-4 flex items-center justify-between">
-          <div className="font-display text-xl">
+      <div className="bg-background rounded-2xl max-w-lg w-full my-8 shadow-2xl border border-border overflow-hidden flex flex-col max-h-[90vh]">
+        <div className="bg-[oklch(0.52_0.16_145)] text-white px-6 py-4 flex items-center justify-between sticky top-0 z-50 flex-shrink-0">
+          <div className="font-display text-xl font-bold">
             {phase === "cart" ? "Finalizar pedido" : "Pague com Pix"}
           </div>
-          <button onClick={onClose} className="opacity-80 hover:opacity-100"><X className="w-5 h-5" /></button>
+          <button onClick={onClose} className="opacity-80 hover:opacity-100 p-1.5 rounded-full hover:bg-white/10 transition cursor-pointer"><X className="w-6 h-6" /></button>
         </div>
 
-        {phase === "cart" && (
-          <div className="p-6 space-y-4">
-            <div className="flex items-center justify-between py-3 border-b border-border">
-              <div>
-                <div className="font-semibold">Foto com {character}</div>
-                <div className="text-xs text-muted-foreground">Versão HD sem marca d'água</div>
+        <div className="overflow-y-auto flex-1 p-6 space-y-4">
+          {phase === "cart" && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between py-3 border-b border-border">
+                <div>
+                  <div className="font-semibold">Foto com {character}</div>
+                  <div className="text-xs text-muted-foreground">Versão HD sem marca d'água</div>
+                </div>
+                <div className="font-semibold text-right">
+                  <span className="text-xs text-muted-foreground line-through mr-2">R$ 19,90</span>
+                  <span className="text-[oklch(0.52_0.16_145)]">R$ 6,22</span>
+                </div>
               </div>
-              <div className="font-semibold text-right">
-                <span className="text-xs text-muted-foreground line-through mr-2">R$ 19,90</span>
-                <span className="text-[oklch(0.52_0.16_145)]">R$ 6,22</span>
+
+              <div className="text-xs uppercase tracking-wider text-muted-foreground font-semibold pt-2">
+                🔥 Adicione ao seu pedido
               </div>
-            </div>
 
-            <div className="text-xs uppercase tracking-wider text-muted-foreground font-semibold pt-2">
-              🔥 Adicione ao seu pedido
-            </div>
+              <OrderBump
+                checked={bumps.oracoes}
+                onToggle={() => setBumps({ ...bumps, oracoes: !bumps.oracoes })}
+                title="250+ Orações Secretas"
+                desc="Compilado exclusivo de orações poderosas para sua família e seu país."
+                price="R$ 3,99"
+                badge="MAIS PEDIDO"
+              />
+              <OrderBump
+                checked={bumps.guia}
+                onToggle={() => setBumps({ ...bumps, guia: !bumps.guia })}
+                title="GUIA FILHO DE DIREITA"
+                desc="O manual definitivo para criar seus filhos com os verdadeiros valores."
+                price="R$ 14,90"
+              />
 
-            <OrderBump
-              checked={bumps.oracoes}
-              onToggle={() => setBumps({ ...bumps, oracoes: !bumps.oracoes })}
-              title="250+ Orações Secretas"
-              desc="Compilado exclusivo de orações poderosas para sua família e seu país."
-              price="R$ 3,99"
-              badge="MAIS PEDIDO"
-            />
-            <OrderBump
-              checked={bumps.guia}
-              onToggle={() => setBumps({ ...bumps, guia: !bumps.guia })}
-              title="GUIA FILHO DE DIREITA"
-              desc="O manual definitivo para criar seus filhos com os verdadeiros valores."
-              price="R$ 14,90"
-            />
-
-            <div className="bg-muted rounded-xl p-4 flex items-center justify-between">
-              <div className="text-sm text-muted-foreground">Total com desconto especial</div>
-              <div className="text-right">
-                <span className="text-xs text-muted-foreground line-through block leading-none mb-1">R$ 19,90</span>
-                <span className="font-display text-3xl">R$ {total.toFixed(2).replace(".", ",")}</span>
+              <div className="bg-muted rounded-xl p-4 flex items-center justify-between">
+                <div className="text-sm text-muted-foreground">Total com desconto especial</div>
+                <div className="text-right">
+                  <span className="text-xs text-muted-foreground line-through block leading-none mb-1">R$ 19,90</span>
+                  <span className="font-display text-3xl">R$ {total.toFixed(2).replace(".", ",")}</span>
+                </div>
               </div>
-            </div>
 
-            {/* TRUST BADGES */}
-            <div className="grid grid-cols-3 gap-2 py-3 border-t border-b border-border text-[9px] text-center text-muted-foreground uppercase tracking-wider font-semibold">
-              <div className="flex flex-col items-center gap-1.5">
-                <ShieldCheck className="w-4 h-4 text-[oklch(0.52_0.16_145)]" />
-                <span>Compra Protegida</span>
+              {/* TRUST BADGES */}
+              <div className="grid grid-cols-3 gap-2 py-3 border-t border-b border-border text-[9px] text-center text-muted-foreground uppercase tracking-wider font-semibold">
+                <div className="flex flex-col items-center gap-1.5">
+                  <ShieldCheck className="w-4 h-4 text-[oklch(0.52_0.16_145)]" />
+                  <span>Compra Protegida</span>
+                </div>
+                <div className="flex flex-col items-center gap-1.5">
+                  <Check className="w-4 h-4 text-[oklch(0.52_0.16_145)]" />
+                  <span>Entrega Imediata</span>
+                </div>
+                <div className="flex flex-col items-center gap-1.5">
+                  <Sparkles className="w-4 h-4 text-[oklch(0.52_0.16_145)]" />
+                  <span>IA Ultra Realista</span>
+                </div>
               </div>
-              <div className="flex flex-col items-center gap-1.5">
-                <Check className="w-4 h-4 text-[oklch(0.52_0.16_145)]" />
-                <span>Entrega Imediata</span>
-              </div>
-              <div className="flex flex-col items-center gap-1.5">
-                <Sparkles className="w-4 h-4 text-[oklch(0.52_0.16_145)]" />
-                <span>IA Ultra Realista</span>
-              </div>
-            </div>
 
-            <button
-              onClick={handleGenerate}
-              disabled={loading}
-              className="w-full bg-[oklch(0.52_0.16_145)] hover:bg-[oklch(0.45_0.16_145)] disabled:opacity-60 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2"
-            >
-              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <ShieldCheck className="w-5 h-5" />}
-              {loading ? "Gerando Pix…" : "Pagar com Pix"}
-            </button>
-
-            <div className="text-[11px] text-center text-muted-foreground">
-              🔒 Processado com segurança pela NexusPag
-            </div>
-          </div>
-        )}
-
-        {phase === "pix" && pix && (
-          <div className="p-6 space-y-5">
-            <div className="text-center">
-              <div className="text-sm text-muted-foreground font-semibold">Valor total a pagar</div>
-              <div className="font-display text-4xl text-[oklch(0.52_0.16_145)] font-bold">R$ {total.toFixed(2).replace(".", ",")}</div>
-            </div>
-
-            <div className="bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 rounded-xl p-3 text-center text-xs font-semibold flex items-center justify-center gap-2">
-              <span className="animate-pulse text-sm">⚠️</span>
-              <span>Seu Pix promocional expira em: <span className="font-bold font-mono text-sm">{formatTime(timeLeft)}</span></span>
-            </div>
-
-            {/* ABA DE SELEÇÃO: CELULAR vs COMPUTADOR */}
-            <div className="grid grid-cols-2 gap-2 p-1 bg-muted rounded-lg border border-border">
               <button
-                type="button"
-                onClick={() => setPixTab("mobile")}
-                className={`py-2.5 px-3 rounded-md text-xs font-bold transition flex items-center justify-center gap-2 ${
-                  pixTab === "mobile"
-                    ? "bg-background text-foreground shadow-sm border border-border"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
+                onClick={handleGenerate}
+                disabled={loading}
+                className="w-full bg-[oklch(0.52_0.16_145)] hover:bg-[oklch(0.45_0.16_145)] disabled:opacity-60 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2"
               >
-                <Smartphone className="w-4 h-4 text-[oklch(0.52_0.16_145)]" />
-                Pagar no Celular
+                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <ShieldCheck className="w-5 h-5" />}
+                {loading ? "Gerando Pix…" : "Pagar com Pix"}
               </button>
-              <button
-                type="button"
-                onClick={() => setPixTab("computer")}
-                className={`py-2.5 px-3 rounded-md text-xs font-bold transition flex items-center justify-center gap-2 ${
-                  pixTab === "computer"
-                    ? "bg-background text-foreground shadow-sm border border-border"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <Monitor className="w-4 h-4 text-primary" />
-                Pagar no Computador
-              </button>
+
+              <div className="text-[11px] text-center text-muted-foreground">
+                🔒 Processado com segurança por AGENCIA DE MODELOS
+              </div>
             </div>
+          )}
 
-            {/* CONTEÚDO DA ABA CELULAR (PIX COPIA E COLA) */}
-            {pixTab === "mobile" && (
-              <div className="space-y-4">
-                {pix.qrCode && (
-                  <div className="space-y-3">
-                    <button
-                      onClick={() => copy(pix.qrCode)}
-                      className={`w-full py-4 px-4 rounded-2xl flex flex-col items-center justify-center gap-1.5 transition-all shadow-lg active:scale-98 ${
-                        copied
-                          ? "bg-emerald-600 hover:bg-emerald-700 text-white ring-4 ring-emerald-600/30"
-                          : "bg-[oklch(0.52_0.16_145)] hover:bg-[oklch(0.45_0.16_145)] text-white border-2 border-yellow-400 shadow-[oklch(0.52_0.16_145)]/20 animate-pulse-slow"
-                      }`}
-                    >
-                      <div className="flex items-center gap-2 font-display text-lg font-bold">
-                        {copied ? <Check className="w-6 h-6 animate-bounce" /> : <Copy className="w-5 h-5" />}
-                        {copied ? "CÓDIGO COPIADO COM SUCESSO!" : "1. CLIQUE AQUI PARA COPIAR O PIX"}
-                      </div>
-                      <span className="text-[11px] opacity-90 font-medium">
-                        {copied ? "Agora é só abrir o app do seu banco e colar" : "Toque acima para salvar o código no celular"}
-                      </span>
-                    </button>
+          {phase === "pix" && pix && (
+            <div className="space-y-5">
+              <div className="text-center">
+                <div className="text-sm text-muted-foreground font-semibold">Valor total a pagar</div>
+                <div className="font-display text-4xl text-[oklch(0.52_0.16_145)] font-bold">R$ {total.toFixed(2).replace(".", ",")}</div>
+              </div>
 
-                    {/* BANNER VISUAL GIGANTE DE CONFIRMAÇÃO */}
-                    {copied && (
-                      <div className="bg-emerald-500/10 border-2 border-emerald-500 text-emerald-800 dark:text-emerald-300 rounded-xl p-4 space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
-                        <div className="flex items-center gap-2 font-bold text-base">
-                          <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
-                          <span>✅ PIX COPIADO!</span>
+              <div className="bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 rounded-xl p-3 text-center text-xs font-semibold flex items-center justify-center gap-2">
+                <span className="animate-pulse text-sm">⚠️</span>
+                <span>Seu Pix promocional expira em: <span className="font-bold font-mono text-sm">{formatTime(timeLeft)}</span></span>
+              </div>
+
+              {/* ABA DE SELEÇÃO: CELULAR vs COMPUTADOR */}
+              <div className="grid grid-cols-2 gap-2 p-1 bg-muted rounded-lg border border-border">
+                <button
+                  type="button"
+                  onClick={() => setPixTab("mobile")}
+                  className={`py-2.5 px-3 rounded-md text-xs font-bold transition flex items-center justify-center gap-2 ${
+                    pixTab === "mobile"
+                      ? "bg-background text-foreground shadow-sm border border-border"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <Smartphone className="w-4 h-4 text-[oklch(0.52_0.16_145)]" />
+                  Pagar no Celular
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPixTab("computer")}
+                  className={`py-2.5 px-3 rounded-md text-xs font-bold transition flex items-center justify-center gap-2 ${
+                    pixTab === "computer"
+                      ? "bg-background text-foreground shadow-sm border border-border"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <Monitor className="w-4 h-4 text-primary" />
+                  Pagar no Computador
+                </button>
+              </div>
+
+              {/* CONTEÚDO DA ABA CELULAR (PIX COPIA E COLA) */}
+              {pixTab === "mobile" && (
+                <div className="space-y-4">
+                  {pix.qrCode && (
+                    <div className="space-y-3">
+                      <button
+                        onClick={() => copy(pix.qrCode)}
+                        className={`w-full py-4 px-4 rounded-2xl flex flex-col items-center justify-center gap-1.5 transition-all shadow-lg active:scale-98 ${
+                          copied
+                            ? "bg-emerald-600 hover:bg-emerald-700 text-white ring-4 ring-emerald-600/30"
+                            : "bg-[oklch(0.52_0.16_145)] hover:bg-[oklch(0.45_0.16_145)] text-white border-2 border-yellow-400 shadow-[oklch(0.52_0.16_145)]/20 animate-pulse-slow"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 font-display text-lg font-bold">
+                          {copied ? <Check className="w-6 h-6 animate-bounce" /> : <Copy className="w-5 h-5" />}
+                          {copied ? "CÓDIGO COPIADO COM SUCESSO!" : "1. CLIQUE AQUI PARA COPIAR O PIX"}
                         </div>
-                        <p className="text-xs font-semibold leading-relaxed">
-                          Tudo pronto! O código Pix já está guardado no seu celular. Agora abra o aplicativo do seu banco para fazer o pagamento.
-                        </p>
-                      </div>
-                    )}
+                        <span className="text-[11px] opacity-90 font-medium">
+                          {copied ? "Agora é só abrir o app do seu banco e colar" : "Toque acima para salvar o código no celular"}
+                        </span>
+                      </button>
 
-                    {/* PASSO A PASSO DIDÁTICO */}
-                    <div className="bg-muted/60 rounded-xl p-4 border border-border space-y-4">
-                      <div className="text-xs uppercase tracking-wider text-muted-foreground font-bold flex items-center gap-1.5 pb-2 border-b border-border">
-                        <HelpCircle className="w-4 h-4 text-[oklch(0.52_0.16_145)]" />
-                        <span>Como Pagar no Celular? Passo a Passo</span>
-                      </div>
-                      
-                      <div className="space-y-4">
-                        <div className="flex gap-3">
-                          <div className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs flex-shrink-0 transition-colors ${
-                            copied ? "bg-emerald-600 text-white" : "bg-[oklch(0.52_0.16_145)] text-white"
-                          }`}>
-                            1
+                      {/* BANNER VISUAL GIGANTE DE CONFIRMAÇÃO */}
+                      {copied && (
+                        <div className="bg-emerald-500/10 border-2 border-emerald-500 text-emerald-800 dark:text-emerald-300 rounded-xl p-4 space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                          <div className="flex items-center gap-2 font-bold text-base">
+                            <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
+                            <span>✅ PIX COPIADO!</span>
                           </div>
-                          <div>
-                            <h4 className="font-bold text-xs text-foreground">Copie o código</h4>
-                            <p className="text-[11px] text-muted-foreground mt-0.5">
-                              {copied 
-                                ? "Concluído! O código já está copiado." 
-                                : "Clique no botão verde acima para copiar o código Pix automático."}
-                            </p>
-                          </div>
+                          <p className="text-xs font-semibold leading-relaxed">
+                            Tudo pronto! O código Pix já está guardado no seu celular. Agora abra o aplicativo do seu banco para fazer o pagamento.
+                          </p>
                         </div>
+                      )}
 
-                        <div className="flex gap-3">
-                          <div className="w-7 h-7 rounded-full bg-[oklch(0.52_0.16_145)] text-white flex items-center justify-center font-bold text-xs flex-shrink-0">
-                            2
-                          </div>
-                          <div>
-                            <h4 className="font-bold text-xs text-foreground">Abra o App do seu Banco</h4>
-                            <p className="text-[11px] text-muted-foreground mt-0.5">
-                              Saia desta tela e abra o aplicativo onde você costuma ver seu saldo ou fazer transferências (ex: Caixa, Banco do Brasil, Itaú, Bradesco, Nubank).
-                            </p>
-                          </div>
+                      {/* PASSO A PASSO DIDÁTICO */}
+                      <div className="bg-muted/60 rounded-xl p-4 border border-border space-y-4">
+                        <div className="text-xs uppercase tracking-wider text-muted-foreground font-bold flex items-center gap-1.5 pb-2 border-b border-border">
+                          <HelpCircle className="w-4 h-4 text-[oklch(0.52_0.16_145)]" />
+                          <span>Como Pagar no Celular? Passo a Passo</span>
                         </div>
-
-                        <div className="flex gap-3">
-                          <div className="w-7 h-7 rounded-full bg-[oklch(0.52_0.16_145)] text-white flex items-center justify-center font-bold text-xs flex-shrink-0">
-                            3
+                        
+                        <div className="space-y-4">
+                          <div className="flex gap-3">
+                            <div className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs flex-shrink-0 transition-colors ${
+                              copied ? "bg-emerald-600 text-white" : "bg-[oklch(0.52_0.16_145)] text-white"
+                            }`}>
+                              1
+                            </div>
+                            <div>
+                              <h4 className="font-bold text-xs text-foreground">Copie o código</h4>
+                              <p className="text-[11px] text-muted-foreground mt-0.5">
+                                {copied 
+                                  ? "Concluído! O código já está copiado." 
+                                  : "Clique no botão verde acima para copiar o código Pix automático."}
+                              </p>
+                            </div>
                           </div>
-                          <div>
-                            <h4 className="font-bold text-xs text-foreground">Selecione "Pix Copia e Cola"</h4>
-                            <p className="text-[11px] text-muted-foreground mt-0.5">
-                              Vá na área <strong>Pix</strong> do banco, depois procure pela opção <strong>Pix Copia e Cola</strong> (ou Pagar &gt; Pix Copia e Cola).
-                            </p>
-                            <div className="bg-amber-500/10 border border-amber-500/20 text-amber-800 dark:text-amber-300 rounded-lg p-2.5 mt-2 text-[10px] font-semibold flex gap-2">
-                              <Info className="w-3.5 h-3.5 text-amber-600 flex-shrink-0 mt-0.5" />
-                              <span><strong>Super Dica:</strong> Ao abrir o app de alguns bancos (como Nubank e Itaú), ele detecta o código sozinho e pergunta: <em>"Quer fazer um Pix para a NexusPag?"</em>. Basta aceitar!</span>
+
+                          <div className="flex gap-3">
+                            <div className="w-7 h-7 rounded-full bg-[oklch(0.52_0.16_145)] text-white flex items-center justify-center font-bold text-xs flex-shrink-0">
+                              2
+                            </div>
+                            <div>
+                              <h4 className="font-bold text-xs text-foreground">Abra o App do seu Banco</h4>
+                              <p className="text-[11px] text-muted-foreground mt-0.5">
+                                Saia desta tela e abra o aplicativo onde você costuma ver seu saldo ou fazer transferências (ex: Caixa, Banco do Brasil, Itaú, Bradesco, Nubank).
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex gap-3">
+                            <div className="w-7 h-7 rounded-full bg-[oklch(0.52_0.16_145)] text-white flex items-center justify-center font-bold text-xs flex-shrink-0">
+                              3
+                            </div>
+                            <div>
+                              <h4 className="font-bold text-xs text-foreground">Selecione "Pix Copia e Cola"</h4>
+                              <p className="text-[11px] text-muted-foreground mt-0.5">
+                                Vá na área <strong>Pix</strong> do banco, depois procure pela opção <strong>Pix Copia e Cola</strong> (ou Pagar &gt; Pix Copia e Cola).
+                              </p>
+                              <div className="bg-amber-500/10 border border-amber-500/20 text-amber-800 dark:text-amber-300 rounded-lg p-2.5 mt-2 text-[10px] font-semibold flex gap-2">
+                                <Info className="w-3.5 h-3.5 text-amber-600 flex-shrink-0 mt-0.5" />
+                                <span><strong>Super Dica:</strong> Ao abrir o app de alguns bancos (como Nubank e Itaú), ele detecta o código sozinho e pergunta: <em>"Quer fazer um Pix para AGENCIA DE MODELOS?"</em>. Basta aceitar!</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex gap-3">
+                            <div className="w-7 h-7 rounded-full bg-[oklch(0.52_0.16_145)] text-white flex items-center justify-center font-bold text-xs flex-shrink-0">
+                              4
+                            </div>
+                            <div>
+                              <h4 className="font-bold text-xs text-foreground">Cole e confirme o pagamento</h4>
+                              <p className="text-[11px] text-muted-foreground mt-0.5">
+                                Cole o código na caixinha, confira se o valor está correto e confirme a transação. O sistema detectará o pagamento na hora!
+                              </p>
                             </div>
                           </div>
                         </div>
+                      </div>
 
-                        <div className="flex gap-3">
-                          <div className="w-7 h-7 rounded-full bg-[oklch(0.52_0.16_145)] text-white flex items-center justify-center font-bold text-xs flex-shrink-0">
-                            4
+                      {/* DETALHES DE EXPANSÃO PARA CÓDIGO POR EXTENSO */}
+                      <div className="pt-1">
+                        <details className="group">
+                          <summary className="text-[10px] text-muted-foreground font-semibold cursor-pointer list-none flex items-center gap-1 hover:text-foreground transition select-none">
+                            <ChevronRight className="w-3 h-3 group-open:rotate-90 transition-transform" />
+                            <span>Mostrar código Pix por extenso (se precisar ver ou copiar manualmente)</span>
+                          </summary>
+                          <div className="bg-muted rounded-lg p-2.5 text-[10px] break-all font-mono mt-1.5 max-h-20 overflow-y-auto border border-border select-all">
+                            {pix.qrCode}
                           </div>
-                          <div>
-                            <h4 className="font-bold text-xs text-foreground">Cole e confirme o pagamento</h4>
-                            <p className="text-[11px] text-muted-foreground mt-0.5">
-                              Cole o código na caixinha, confira se o valor está correto e confirme a transação. O sistema detectará o pagamento na hora!
-                            </p>
-                          </div>
-                        </div>
+                        </details>
                       </div>
                     </div>
-
-                    {/* DETALHES DE EXPANSÃO PARA CÓDIGO POR EXTENSO */}
-                    <div className="pt-1">
-                      <details className="group">
-                        <summary className="text-[10px] text-muted-foreground font-semibold cursor-pointer list-none flex items-center gap-1 hover:text-foreground transition select-none">
-                          <ChevronRight className="w-3 h-3 group-open:rotate-90 transition-transform" />
-                          <span>Mostrar código Pix por extenso (se precisar ver ou copiar manualmente)</span>
-                        </summary>
-                        <div className="bg-muted rounded-lg p-2.5 text-[10px] break-all font-mono mt-1.5 max-h-20 overflow-y-auto border border-border select-all">
-                          {pix.qrCode}
-                        </div>
-                      </details>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* CONTEÚDO DA ABA COMPUTADOR (QR CODE) */}
-            {pixTab === "computer" && (
-              <div className="space-y-4 text-center">
-                <p className="text-xs text-muted-foreground font-medium max-w-sm mx-auto">
-                  Abra o aplicativo de banco no seu celular, escolha a opção **"Ler QR Code"** dentro do Pix e aponte a câmera para a tela abaixo:
-                </p>
-
-                {pix.qrCodeImage && (
-                  <div className="flex justify-center">
-                    <img
-                      src={pix.qrCodeImage.startsWith("data:") ? pix.qrCodeImage : `data:image/png;base64,${pix.qrCodeImage}`}
-                      alt="QR Code Pix"
-                      className="w-52 h-52 rounded-lg border-4 border-[oklch(0.88_0.19_95)] bg-white p-1"
-                    />
-                  </div>
-                )}
-
-                <div className="bg-blue-500/10 border border-blue-500/20 text-blue-800 dark:text-blue-300 rounded-xl p-3 text-[11px] font-semibold flex items-center justify-center gap-2 max-w-xs mx-auto">
-                  <Smartphone className="w-4 h-4 text-blue-600 flex-shrink-0" />
-                  <span>Use esta opção se estiver no computador e quiser pagar com o seu celular.</span>
+                  )}
                 </div>
+              )}
+
+              {/* CONTEÚDO DA ABA COMPUTADOR (QR CODE) */}
+              {pixTab === "computer" && (
+                <div className="space-y-4 text-center">
+                  <p className="text-xs text-muted-foreground font-medium max-w-sm mx-auto">
+                    Abra o aplicativo de banco no seu celular, escolha a opção **"Ler QR Code"** dentro do Pix e aponte a câmera para a tela abaixo:
+                  </p>
+
+                  {pix.qrCodeImage && (
+                    <div className="flex justify-center">
+                      <img
+                        src={pix.qrCodeImage.startsWith("data:") ? pix.qrCodeImage : `data:image/png;base64,${pix.qrCodeImage}`}
+                        alt="QR Code Pix"
+                        className="w-52 h-52 rounded-lg border-4 border-[oklch(0.88_0.19_95)] bg-white p-1"
+                      />
+                    </div>
+                  )}
+
+                  <div className="bg-blue-500/10 border border-blue-500/20 text-blue-800 dark:text-blue-300 rounded-xl p-3 text-[11px] font-semibold flex items-center justify-center gap-2 max-w-xs mx-auto">
+                    <Smartphone className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                    <span>Use esta opção se estiver no computador e quiser pagar com o seu celular.</span>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex items-center justify-center gap-2.5 text-xs text-muted-foreground py-2 border-t border-border pt-4">
+                <Loader2 className="w-4 h-4 animate-spin text-[oklch(0.52_0.16_145)]" />
+                <span className="font-semibold animate-pulse">Aguardando confirmação do pagamento…</span>
               </div>
-            )}
 
-            <div className="flex items-center justify-center gap-2.5 text-xs text-muted-foreground py-2 border-t border-border pt-4">
-              <Loader2 className="w-4 h-4 animate-spin text-[oklch(0.52_0.16_145)]" />
-              <span className="font-semibold animate-pulse">Aguardando confirmação do pagamento…</span>
+              {/* SIMULAR CONFIRMAÇÃO DE PAGAMENTO E ENTREGA */}
+              {isDevMode && (
+                <button
+                  type="button"
+                  onClick={onPaid}
+                  className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 text-xs shadow-md shadow-amber-500/20 cursor-pointer animate-pulse-slow transition active:scale-98"
+                >
+                  ⚡ Simular Confirmação e Entregar Imagem
+                </button>
+              )}
+
+              <div className="text-[10px] text-center text-muted-foreground font-medium">
+                🔒 Liberação automática imediata. Não feche esta janela após pagar.
+              </div>
             </div>
-
-            {/* SIMULAR CONFIRMAÇÃO DE PAGAMENTO E ENTREGA */}
-            {isDevMode && (
-              <button
-                type="button"
-                onClick={onPaid}
-                className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 text-xs shadow-md shadow-amber-500/20 cursor-pointer animate-pulse-slow transition active:scale-98"
-              >
-                ⚡ Simular Confirmação e Entregar Imagem
-              </button>
-            )}
-
-            <div className="text-[10px] text-center text-muted-foreground font-medium">
-              🔒 Liberação automática imediata. Não feche esta janela após pagar.
-            </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );
@@ -1460,170 +1416,172 @@ function UpsellModal({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-      <div className="bg-background rounded-2xl max-w-lg w-full my-8 shadow-2xl border-2 border-[oklch(0.88_0.19_95)] overflow-hidden">
-        <div className="bg-gradient-to-br from-[oklch(0.28_0.13_265)] to-[oklch(0.18_0.04_145)] text-white px-6 py-8 text-center relative">
-          <button onClick={() => onClose(false)} className="absolute top-3 right-3 opacity-70 hover:opacity-100 cursor-pointer"><X className="w-5 h-5" /></button>
+      <div className="bg-background rounded-2xl max-w-lg w-full my-8 shadow-2xl border-2 border-[oklch(0.88_0.19_95)] overflow-hidden flex flex-col max-h-[90vh]">
+        <div className="bg-gradient-to-br from-[oklch(0.28_0.13_265)] to-[oklch(0.18_0.04_145)] text-white px-6 py-8 text-center relative flex-shrink-0 sticky top-0 z-50">
+          <button onClick={() => onClose(false)} className="absolute top-4 right-4 opacity-70 hover:opacity-100 cursor-pointer p-1.5 rounded-full hover:bg-white/10 transition"><X className="w-6 h-6" /></button>
           <div className="text-xs uppercase tracking-[0.3em] text-[oklch(0.88_0.19_95)] mb-2">Oferta única · só agora</div>
-          <div className="font-display text-3xl md:text-4xl leading-tight">
+          <div className="font-display text-2xl md:text-3xl leading-tight">
             {phase === "offer" ? content.titleOffer : content.titlePix}
           </div>
         </div>
 
-        {phase === "offer" && (
-          <div className="p-6 space-y-4">
-            <p className="text-sm text-muted-foreground text-center leading-relaxed">
-              {content.desc}
-            </p>
+        <div className="overflow-y-auto flex-1 p-6 space-y-4">
+          {phase === "offer" && (
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground text-center leading-relaxed">
+                {content.desc}
+              </p>
 
-            <ul className="space-y-2.5 text-sm">
-              {content.features.map((i) => (
-                <li key={i} className="flex items-start gap-2">
-                  <Check className="w-5 h-5 text-[oklch(0.52_0.16_145)] flex-shrink-0 mt-0.5" />
-                  <span className="text-foreground font-medium">{i}</span>
-                </li>
-              ))}
-            </ul>
+              <ul className="space-y-2.5 text-sm">
+                {content.features.map((i) => (
+                  <li key={i} className="flex items-start gap-2">
+                    <Check className="w-5 h-5 text-[oklch(0.52_0.16_145)] flex-shrink-0 mt-0.5" />
+                    <span className="text-foreground font-medium">{i}</span>
+                  </li>
+                ))}
+              </ul>
 
-            <div className="bg-muted rounded-xl p-4 text-center border border-border">
-              <div className="text-xs text-muted-foreground line-through font-semibold">De R$ 97,00</div>
-              <div className="font-display text-4xl text-[oklch(0.52_0.16_145)] font-bold">R$ 27,00</div>
-              <div className="text-xs text-muted-foreground font-medium">à vista, hoje apenas</div>
-            </div>
+              <div className="bg-muted rounded-xl p-4 text-center border border-border">
+                <div className="text-xs text-muted-foreground line-through font-semibold">De R$ 97,00</div>
+                <div className="font-display text-4xl text-[oklch(0.52_0.16_145)] font-bold">R$ 27,00</div>
+                <div className="text-xs text-muted-foreground font-medium">à vista, hoje apenas</div>
+              </div>
 
-            <button
-              onClick={handleBuy}
-              disabled={loading}
-              className="w-full bg-[oklch(0.88_0.19_95)] hover:bg-[oklch(0.82_0.19_95)] text-[oklch(0.18_0.04_145)] font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition cursor-pointer shadow-lg shadow-[oklch(0.88_0.19_95)]/20 active:scale-98"
-            >
-              {loading ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
-              ) : (
-                <Sparkles className="w-5 h-5" />
-              )}
-              {loading ? content.btnLoadingLabel : content.btnLabel}
-            </button>
-            
-            <button onClick={() => onClose(false)} className="w-full text-xs text-muted-foreground hover:text-foreground py-2 font-medium cursor-pointer">
-              Não, obrigado. Recusar oferta e ir para minha foto.
-            </button>
-          </div>
-        )}
-
-        {phase === "pix" && pix && (
-          <div className="p-6 space-y-5">
-            <div className="text-center">
-              <div className="text-sm text-muted-foreground font-semibold">Valor da Oferta</div>
-              <div className="font-display text-3xl text-[oklch(0.52_0.16_145)] font-bold">R$ 27,00</div>
-            </div>
-
-            <div className="bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 rounded-xl p-3 text-center text-xs font-semibold flex items-center justify-center gap-2">
-              <span className="animate-pulse text-sm">⚠️</span>
-              <span>Expira em: <span className="font-bold font-mono text-sm">{formatTime(timeLeft)}</span></span>
-            </div>
-
-            {/* ABA DE SELEÇÃO */}
-            <div className="grid grid-cols-2 gap-2 p-1 bg-muted rounded-lg border border-border">
               <button
-                type="button"
-                onClick={() => setPixTab("mobile")}
-                className={`py-2 px-3 rounded-md text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer ${
-                  pixTab === "mobile"
-                    ? "bg-background text-foreground shadow-sm border border-border"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
+                onClick={handleBuy}
+                disabled={loading}
+                className="w-full bg-[oklch(0.88_0.19_95)] hover:bg-[oklch(0.82_0.19_95)] text-[oklch(0.18_0.04_145)] font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition cursor-pointer shadow-lg shadow-[oklch(0.88_0.19_95)]/20 active:scale-98"
               >
-                <Smartphone className="w-4 h-4 text-[oklch(0.52_0.16_145)]" />
-                Pagar no Celular
+                {loading ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <Sparkles className="w-5 h-5" />
+                )}
+                {loading ? content.btnLoadingLabel : content.btnLabel}
               </button>
-              <button
-                type="button"
-                onClick={() => setPixTab("computer")}
-                className={`py-2 px-3 rounded-md text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer ${
-                  pixTab === "computer"
-                    ? "bg-background text-foreground shadow-sm border border-border"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <Monitor className="w-4 h-4 text-primary" />
-                Pagar no Computador
+              
+              <button onClick={() => onClose(false)} className="w-full text-xs text-muted-foreground hover:text-foreground py-2 font-medium cursor-pointer">
+                Não, obrigado. Recusar oferta e ir para minha foto.
               </button>
             </div>
+          )}
 
-            {/* CONTEÚDO CELULAR */}
-            {pixTab === "mobile" && (
-              <div className="space-y-4">
-                {pix.qrCode && (
-                  <div className="space-y-3">
-                    <button
-                      onClick={() => copy(pix.qrCode)}
-                      className={`w-full py-4 px-4 rounded-2xl flex flex-col items-center justify-center gap-1.5 transition-all shadow-lg active:scale-98 cursor-pointer ${
-                        copied
-                          ? "bg-emerald-600 hover:bg-emerald-700 text-white ring-4 ring-emerald-600/30"
-                          : "bg-[oklch(0.52_0.16_145)] hover:bg-[oklch(0.45_0.16_145)] text-white border-2 border-yellow-400 shadow-[oklch(0.52_0.16_145)]/20 animate-pulse-slow"
-                      }`}
-                    >
-                      <div className="flex items-center gap-2 font-display text-base font-bold">
-                        {copied ? <Check className="w-5 h-5 animate-bounce" /> : <Copy className="w-4.5 h-4.5" />}
-                        {copied ? "CÓDIGO COPIADO COM SUCESSO!" : "1. CLIQUE AQUI PARA COPIAR O PIX"}
-                      </div>
-                    </button>
+          {phase === "pix" && pix && (
+            <div className="space-y-5">
+              <div className="text-center">
+                <div className="text-sm text-muted-foreground font-semibold">Valor da Oferta</div>
+                <div className="font-display text-3xl text-[oklch(0.52_0.16_145)] font-bold">R$ 27,00</div>
+              </div>
 
-                    {copied && (
-                      <div className="bg-emerald-500/10 border-2 border-emerald-500 text-emerald-800 dark:text-emerald-300 rounded-xl p-3.5 space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-300">
-                        <div className="flex items-center gap-2 font-bold text-sm">
-                          <CheckCircle2 className="w-4.5 h-4.5 text-emerald-600 dark:text-emerald-400" />
-                          <span>✅ PIX COPIADO!</span>
+              <div className="bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 rounded-xl p-3 text-center text-xs font-semibold flex items-center justify-center gap-2">
+                <span className="animate-pulse text-sm">⚠️</span>
+                <span>Expira em: <span className="font-bold font-mono text-sm">{formatTime(timeLeft)}</span></span>
+              </div>
+
+              {/* ABA DE SELEÇÃO */}
+              <div className="grid grid-cols-2 gap-2 p-1 bg-muted rounded-lg border border-border">
+                <button
+                  type="button"
+                  onClick={() => setPixTab("mobile")}
+                  className={`py-2 px-3 rounded-md text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer ${
+                    pixTab === "mobile"
+                      ? "bg-background text-foreground shadow-sm border border-border"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <Smartphone className="w-4 h-4 text-[oklch(0.52_0.16_145)]" />
+                  Pagar no Celular
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPixTab("computer")}
+                  className={`py-2 px-3 rounded-md text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer ${
+                    pixTab === "computer"
+                      ? "bg-background text-foreground shadow-sm border border-border"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <Monitor className="w-4 h-4 text-primary" />
+                  Pagar no Computador
+                </button>
+              </div>
+
+              {/* CONTEÚDO CELULAR */}
+              {pixTab === "mobile" && (
+                <div className="space-y-4">
+                  {pix.qrCode && (
+                    <div className="space-y-3">
+                      <button
+                        onClick={() => copy(pix.qrCode)}
+                        className={`w-full py-4 px-4 rounded-2xl flex flex-col items-center justify-center gap-1.5 transition-all shadow-lg active:scale-98 cursor-pointer ${
+                          copied
+                            ? "bg-emerald-600 hover:bg-emerald-700 text-white ring-4 ring-emerald-600/30"
+                            : "bg-[oklch(0.52_0.16_145)] hover:bg-[oklch(0.45_0.16_145)] text-white border-2 border-yellow-400 shadow-[oklch(0.52_0.16_145)]/20 animate-pulse-slow"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 font-display text-base font-bold">
+                          {copied ? <Check className="w-5 h-5 animate-bounce" /> : <Copy className="w-4.5 h-4.5" />}
+                          {copied ? "CÓDIGO COPIADO COM SUCESSO!" : "1. CLIQUE AQUI PARA COPIAR O PIX"}
                         </div>
-                        <p className="text-[11px] font-semibold leading-relaxed">
-                          Agora abra o aplicativo do seu banco, escolha Pix Copia e Cola, cole o código e confirme!
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                )}
+                      </button>
+
+                      {copied && (
+                        <div className="bg-emerald-500/10 border-2 border-emerald-500 text-emerald-800 dark:text-emerald-300 rounded-xl p-3.5 space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-300">
+                          <div className="flex items-center gap-2 font-bold text-sm">
+                            <CheckCircle2 className="w-4.5 h-4.5 text-emerald-600 dark:text-emerald-400" />
+                            <span>✅ PIX COPIADO!</span>
+                          </div>
+                          <p className="text-[11px] font-semibold leading-relaxed">
+                            Agora abra o aplicativo do seu banco, escolha Pix Copia e Cola, cole o código e confirme!
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* CONTEÚDO COMPUTADOR */}
+              {pixTab === "computer" && (
+                <div className="space-y-4 text-center">
+                  <p className="text-[11px] text-muted-foreground font-medium max-w-sm mx-auto">
+                    Aponte a câmera do celular para ler o QR Code abaixo no Pix do seu app:
+                  </p>
+
+                  {pix.qrCodeImage && (
+                    <div className="flex justify-center">
+                      <img
+                        src={pix.qrCodeImage.startsWith("data:") ? pix.qrCodeImage : `data:image/png;base64,${pix.qrCodeImage}`}
+                        alt="QR Code Pix"
+                        className="w-44 h-44 rounded-lg border-2 border-border bg-white p-1"
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground py-2 border-t border-border pt-4">
+                <Loader2 className="w-4.5 h-4.5 animate-spin text-[oklch(0.52_0.16_145)]" />
+                <span className="font-semibold animate-pulse">Aguardando confirmação do pagamento…</span>
               </div>
-            )}
 
-            {/* CONTEÚDO COMPUTADOR */}
-            {pixTab === "computer" && (
-              <div className="space-y-4 text-center">
-                <p className="text-[11px] text-muted-foreground font-medium max-w-sm mx-auto">
-                  Aponte a câmera do celular para ler o QR Code abaixo no Pix do seu app:
-                </p>
+              {/* SIMULAÇÃO DE PAGAMENTO DO UPSELL */}
+              {isDevMode && (
+                <button
+                  type="button"
+                  onClick={simulateSuccess}
+                  className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 text-xs shadow-md shadow-amber-500/20 cursor-pointer animate-pulse transition active:scale-98"
+                >
+                  {content.simulatedLabel}
+                </button>
+              )}
 
-                {pix.qrCodeImage && (
-                  <div className="flex justify-center">
-                    <img
-                      src={pix.qrCodeImage.startsWith("data:") ? pix.qrCodeImage : `data:image/png;base64,${pix.qrCodeImage}`}
-                      alt="QR Code Pix"
-                      className="w-44 h-44 rounded-lg border-2 border-border bg-white p-1"
-                    />
-                  </div>
-                )}
+              <div className="text-[10px] text-center text-muted-foreground font-medium">
+                🔒 Liberação e download automático imediato. Não feche essa tela.
               </div>
-            )}
-
-            <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground py-2 border-t border-border pt-4">
-              <Loader2 className="w-4.5 h-4.5 animate-spin text-[oklch(0.52_0.16_145)]" />
-              <span className="font-semibold animate-pulse">Aguardando confirmação do pagamento…</span>
             </div>
-
-            {/* SIMULAÇÃO DE PAGAMENTO DO UPSELL */}
-            {isDevMode && (
-              <button
-                type="button"
-                onClick={simulateSuccess}
-                className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 text-xs shadow-md shadow-amber-500/20 cursor-pointer animate-pulse transition active:scale-98"
-              >
-                {content.simulatedLabel}
-              </button>
-            )}
-
-            <div className="text-[10px] text-center text-muted-foreground font-medium">
-              🔒 Liberação e download automático imediato. Não feche essa tela.
-            </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );
