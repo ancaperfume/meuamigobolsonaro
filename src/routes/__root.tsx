@@ -14,7 +14,7 @@ const META_PIXEL_ID = "27126474183629240";
 
 // 👉 Cole aqui seu TikTok Pixel ID (ex: "C39HB48J098UY76H5G20")
 //    Quando vazio, nenhum script é carregado.
-const TIKTOK_PIXEL_ID = "";
+const TIKTOK_PIXEL_ID = "D8BECBBC77UBL2TTSIF0";
 
 function NotFoundComponent() {
   return (

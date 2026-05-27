@@ -312,6 +312,32 @@ function Index() {
     }
   }, [bumps, total]);
 
+  const simulatePhotoUpload = useCallback(() => {
+    setOriginalPreview(c.example);
+    setStep("generating");
+    
+    // Simulate the server-side generation delay of 15 seconds!
+    setTimeout(() => {
+      setGeneratedUrl(c.example);
+      setStep("preview");
+      toast.success("Foto gerada com sucesso (Simulado)! 🇧🇷");
+      if (typeof window !== "undefined" && window.fbq) {
+        window.fbq("track", "ViewContent", {
+          content_name: `Foto com ${character}`,
+          content_category: "Visualização de Foto com IA",
+        });
+      }
+      if (typeof window !== "undefined" && window.ttq) {
+        window.ttq.track("ViewContent", {
+          content_name: `Foto com ${character}`,
+          content_category: "Visualização de Foto com IA",
+        });
+      }
+    }, 15000); // 15 seconds, matching the full visual scanner cycle!
+    
+    toast.info("Simulando envio... O scanner de IA foi iniciado! ⚡");
+  }, [c.example, character]);
+
   const shareText = useMemo(() => {
     return `Olha que incrível a foto realista que eu criei lado a lado com o meu amigo ${CHARACTERS[character].name}! 🇧🇷 Faça a sua também em segundos no site: ${typeof window !== "undefined" ? window.location.origin : "https://meuamigobolsonaro.com.br"}`;
   }, [character]);
@@ -503,18 +529,26 @@ function Index() {
                 <div className="space-y-3">
                   <UploadButton onClick={() => fileRef.current?.click()} />
                   {isDevMode && (
-                    <button
-                      onClick={() => {
-                        setOriginalPreview(c.example);
-                        setGeneratedUrl(c.example);
-                        setStep("preview");
-                        setShowPayment(true);
-                        toast.info("Geração simulada com sucesso! Checkout aberto.");
-                      }}
-                      className="w-full bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-dashed border-amber-500/30 font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition text-xs cursor-pointer animate-pulse"
-                    >
-                      ⚡ Testar/Simular Checkout Rápido
-                    </button>
+                    <div className="space-y-2">
+                      <button
+                        onClick={simulatePhotoUpload}
+                        className="w-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-dashed border-emerald-500/30 font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition text-xs cursor-pointer"
+                      >
+                        ⚡ Simular Envio e IA Scan (15s)
+                      </button>
+                      <button
+                        onClick={() => {
+                          setOriginalPreview(c.example);
+                          setGeneratedUrl(c.example);
+                          setStep("preview");
+                          setShowPayment(true);
+                          toast.info("Geração simulada com sucesso! Checkout aberto.");
+                        }}
+                        className="w-full bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-dashed border-amber-500/30 font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition text-xs cursor-pointer animate-pulse"
+                      >
+                        ⚡ Testar/Simular Checkout Rápido (Direto)
+                      </button>
+                    </div>
                   )}
                 </div>
               )}
