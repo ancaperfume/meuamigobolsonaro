@@ -93,11 +93,29 @@ const SOCIAL_PROOFS = [
   { name: "Letícia", city: "Porto Alegre/RS", action: "liberou a foto com a Michelle" },
 ];
 
+const RETENTION_TIPS = [
+  "⭐ Dica: Sua foto final será entregue em alta resolução HD e sem marcas d'água após liberação.",
+  "🔒 Segurança: Nossos servidores processam sua imagem de forma 100% segura e confidencial.",
+  "🇧🇷 Mais de 15.000 brasileiros já tiraram sua foto oficial com seus líderes favoritos hoje.",
+  "⚡ Sabia que? Nossa IA analisa mais de 120 pontos faciais para garantir o máximo realismo na montagem."
+];
+
+const getGenerationLogs = (charShort: string) => [
+  "🔍 Analisando as feições e iluminação do seu rosto...",
+  "🎨 Ajustando as cores e o contraste com inteligência artificial...",
+  `🇧🇷 Posicionando você lado a lado com o ${charShort}...`,
+  "⚡ Renderizando imagem em alta definição e removendo ruídos...",
+  "✨ Dando os últimos retoques de realismo... Quase pronto!"
+];
+
 function Index() {
   const [character, setCharacter] = useState<CharKey>("jair");
   const [step, setStep] = useState<Step>("idle");
   const [proof, setProof] = useState<typeof SOCIAL_PROOFS[0] | null>(null);
   const [isDevMode, setIsDevMode] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [logIndex, setLogIndex] = useState(0);
+  const [tipIndex, setTipIndex] = useState(0);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -124,6 +142,40 @@ function Index() {
       clearTimeout(initialTimeout);
     };
   }, []);
+
+  useEffect(() => {
+    if (step !== "generating") {
+      setProgress(0);
+      setLogIndex(0);
+      setTipIndex(0);
+      return;
+    }
+
+    const startTime = Date.now();
+    const progressInterval = setInterval(() => {
+      const elapsedMs = Date.now() - startTime;
+      // Exponential curve: starts fast, slows down, asymptotes towards 99%
+      const nextProgress = Math.min(99, Math.round(99 * (1 - Math.exp(-elapsedMs / 7000))));
+      setProgress(nextProgress);
+    }, 100);
+
+    // Rotate log messages every 3.5 seconds (stopping at last step)
+    const logInterval = setInterval(() => {
+      setLogIndex((prev) => (prev < 4 ? prev + 1 : prev));
+    }, 3500);
+
+    // Rotate retention tips every 5.0 seconds
+    const tipInterval = setInterval(() => {
+      setTipIndex((prev) => (prev + 1) % RETENTION_TIPS.length);
+    }, 5000);
+
+    return () => {
+      clearInterval(progressInterval);
+      clearInterval(logInterval);
+      clearInterval(tipInterval);
+    };
+  }, [step]);
+
   const [generatedUrl, setGeneratedUrl] = useState<string | null>(null);
   const [originalPreview, setOriginalPreview] = useState<string | null>(null);
   const [showPayment, setShowPayment] = useState(false);
@@ -202,6 +254,9 @@ function Index() {
     setActiveUpsell(null);
     setBumps({ oracoes: false, guia: false });
     setPaidBumps({ oracoes: false, guia: false });
+    setProgress(0);
+    setLogIndex(0);
+    setTipIndex(0);
   };
 
   const handlePaid = useCallback(() => {
@@ -313,14 +368,123 @@ function Index() {
               )}
 
               {step === "generating" && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-card">
-                  {originalPreview && (
-                    <img src={originalPreview} alt="" className="absolute inset-0 w-full h-full object-cover blur-md opacity-30" />
-                  )}
-                  <div className="relative z-10 flex flex-col items-center gap-3 text-center px-6">
-                    <Loader2 className="w-10 h-10 animate-spin text-[oklch(0.52_0.16_145)]" />
-                    <div className="font-display text-2xl">Gerando sua foto…</div>
-                    <div className="text-sm text-muted-foreground">{c.short} está chegando pertinho de você 🇧🇷</div>
+                <div className="absolute inset-0 flex flex-col items-center justify-between bg-card text-foreground overflow-hidden">
+                  <style dangerouslySetInnerHTML={{__html: `
+                    @keyframes scanner-sweep {
+                      0% { transform: translateY(0); }
+                      50% { transform: translateY(calc(100% - 6px)); }
+                      100% { transform: translateY(0); }
+                    }
+                    .scanner-container {
+                      position: relative;
+                      width: 100%;
+                      height: 100%;
+                      overflow: hidden;
+                    }
+                    .scanner-line {
+                      position: absolute;
+                      top: 0;
+                      left: 0;
+                      width: 100%;
+                      height: 6px;
+                      background: linear-gradient(90deg, 
+                        rgba(254, 223, 0, 0) 0%, 
+                        rgba(254, 223, 0, 1) 20%, 
+                        rgba(4, 106, 56, 1) 50%, 
+                        rgba(254, 223, 0, 1) 80%, 
+                        rgba(254, 223, 0, 0) 100%
+                      );
+                      box-shadow: 0 0 15px rgba(254, 223, 0, 0.8), 0 0 25px rgba(4, 106, 56, 0.8);
+                      animation: scanner-sweep 3.5s ease-in-out infinite;
+                      z-index: 20;
+                    }
+                    .pulse-soft {
+                      animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+                    }
+                    @keyframes pulse {
+                      0%, 100% { opacity: 1; }
+                      50% { opacity: 0.6; }
+                    }
+                  `}} />
+
+                  {/* BLURRED BACKGROUND PREVIEW WITH SCANNER */}
+                  <div className="absolute inset-0 scanner-container">
+                    {originalPreview ? (
+                      <img 
+                        src={originalPreview} 
+                        alt="Sua foto de entrada" 
+                        className="w-full h-full object-cover blur-sm brightness-[0.4]" 
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-slate-950/80" />
+                    )}
+                    <div className="scanner-line" />
+                  </div>
+
+                  {/* HIGH-TECH FLOATING GRID/UI ELEMENTS */}
+                  <div className="absolute inset-0 pointer-events-none border border-white/10 rounded-2xl z-10 flex flex-col justify-between p-4">
+                    <div className="flex justify-between items-center text-[10px] text-emerald-400 font-mono tracking-wider bg-black/40 backdrop-blur px-2.5 py-1 rounded-full border border-emerald-500/20 self-start">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping mr-2" />
+                      SISTEMA DE PROCESSAMENTO IA ONLINE
+                    </div>
+                    <div className="text-[10px] text-yellow-400 font-mono tracking-wider bg-black/40 backdrop-blur px-2.5 py-1 rounded-full border border-yellow-500/20 self-end">
+                      MODELO: MEU-AMIGO-v3.0.2
+                    </div>
+                  </div>
+
+                  {/* MAIN CONTENT LAYER */}
+                  <div className="relative z-30 flex flex-col items-center justify-between w-full h-full p-6 text-center">
+                    {/* Top spacing / or tiny logo */}
+                    <div className="flex items-center gap-1.5 bg-black/30 backdrop-blur px-3 py-1.5 rounded-full border border-white/5">
+                      <Sparkles className="w-3.5 h-3.5 text-yellow-400 animate-pulse" />
+                      <span className="text-[10px] font-bold text-white uppercase tracking-widest">Criando Montagem Ultra-Realista</span>
+                    </div>
+
+                    {/* Middle status section */}
+                    <div className="w-full max-w-sm space-y-6 my-auto">
+                      <div className="flex flex-col items-center gap-2">
+                        {/* Animated Spinner with Custom Style */}
+                        <div className="relative w-16 h-16 flex items-center justify-center">
+                          <div className="absolute inset-0 rounded-full border-4 border-emerald-500/20 border-t-emerald-500 animate-spin" />
+                          <Loader2 className="w-8 h-8 animate-spin text-yellow-400 opacity-80 absolute" />
+                        </div>
+                        <div className="font-display text-2xl md:text-3xl text-white drop-shadow font-semibold">
+                          {progress}%
+                        </div>
+                      </div>
+
+                      {/* Linear Progress Bar */}
+                      <div className="space-y-2">
+                        <div className="w-full h-3 bg-white/10 rounded-full overflow-hidden border border-white/10 shadow-inner p-[2px]">
+                          <div 
+                            className="h-full bg-gradient-to-r from-yellow-400 via-emerald-500 to-yellow-400 rounded-full transition-all duration-300 ease-out" 
+                            style={{ width: `${progress}%` }}
+                          />
+                        </div>
+                        <div className="flex justify-between text-[10px] text-gray-300 font-mono font-bold px-1 uppercase tracking-wider">
+                          <span>Início</span>
+                          <span className="pulse-soft text-yellow-300">Processando...</span>
+                          <span>Pronto</span>
+                        </div>
+                      </div>
+
+                      {/* Dynamic Stepper Logs */}
+                      <div className="bg-black/55 backdrop-blur-md border border-white/10 rounded-xl p-4 min-h-[72px] flex items-center justify-center transition-all duration-500">
+                        <p className="text-sm md:text-base text-gray-100 font-medium leading-relaxed animate-pulse">
+                          {getGenerationLogs(c.short)[logIndex]}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Bottom Retention Banner */}
+                    <div className="w-full max-w-sm bg-gradient-to-r from-emerald-950/80 to-yellow-950/80 backdrop-blur-sm border border-emerald-500/20 rounded-xl p-3 shadow-lg flex items-center gap-3 text-left">
+                      <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center text-yellow-400 flex-shrink-0">
+                        <ShieldCheck className="w-5 h-5 text-yellow-300" />
+                      </div>
+                      <div className="text-[11px] leading-relaxed text-gray-200">
+                        {RETENTION_TIPS[tipIndex]}
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
