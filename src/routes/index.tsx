@@ -117,50 +117,12 @@ function Index() {
   const [character, setCharacter] = useState<CharKey>("jair");
   const [step, setStep] = useState<Step>("idle");
   const [proof, setProof] = useState<typeof SOCIAL_PROOFS[0] | null>(null);
-  const [isDevMode, setIsDevMode] = useState(false);
   const [progress, setProgress] = useState(0);
   const [logIndex, setLogIndex] = useState(0);
   const [tipIndex, setTipIndex] = useState(0);
   const [hasDownloaded, setHasDownloaded] = useState(false);
   const [showCrossSellModal, setShowCrossSellModal] = useState(false);
-  const [showAdminLogin, setShowAdminLogin] = useState(false);
-  const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
-  const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [promoPrice, setPromoPrice] = useState(6.22);
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search);
-      const isTestUrl = params.get("teste") === "true" || params.get("dev") === "true";
-      const isSessionAuthorized = sessionStorage.getItem("dev_authorized") === "true";
-      const savedAdmin = localStorage.getItem("admin_logged_in") === "true";
-
-      if (savedAdmin) {
-        setIsAdminLoggedIn(true);
-        setIsDevMode(true);
-      }
-
-      if (isTestUrl) {
-        if (isSessionAuthorized) {
-          setIsDevMode(true);
-          toast.info("Modo de Testes Ativado ⚡");
-        } else {
-          const pass = window.prompt("Digite a senha de desenvolvedor para ativar o modo de testes:");
-          if (pass === "patriaamada") {
-            sessionStorage.setItem("dev_authorized", "true");
-            setIsDevMode(true);
-            toast.success("Modo de Testes Ativado com sucesso! ⚡");
-          } else {
-            toast.error("Senha de desenvolvedor incorreta!");
-            const newUrl = window.location.pathname;
-            window.history.replaceState({}, document.title, newUrl);
-          }
-        }
-      } else if (isSessionAuthorized) {
-        setIsDevMode(true);
-      }
-    }
-  }, []);
 
   useEffect(() => {
     const showNextProof = () => {
@@ -318,31 +280,6 @@ function Index() {
     }
   }, [bumps, total]);
 
-  const simulatePhotoUpload = useCallback(() => {
-    setOriginalPreview(c.example);
-    setStep("generating");
-    
-    // Simulate the server-side generation delay of 15 seconds!
-    setTimeout(() => {
-      setGeneratedUrl(c.example);
-      setStep("preview");
-      toast.success("Foto gerada com sucesso (Simulado)! 🇧🇷");
-      if (typeof window !== "undefined" && window.fbq) {
-        window.fbq("track", "ViewContent", {
-          content_name: `Foto com ${character}`,
-          content_category: "Visualização de Foto com IA",
-        });
-      }
-      if (typeof window !== "undefined" && window.ttq) {
-        window.ttq.track("ViewContent", {
-          content_name: `Foto com ${character}`,
-          content_category: "Visualização de Foto com IA",
-        });
-      }
-    }, 15000); // 15 seconds, matching the full visual scanner cycle!
-    
-    toast.info("Simulando envio... O scanner de IA foi iniciado! ⚡");
-  }, [c.example, character]);
 
   const shareText = useMemo(() => {
     return `Olha que incrível a foto realista que eu criei lado a lado com o meu amigo ${CHARACTERS[character].name}! 🇧🇷 Faça a sua também em segundos no site: ${typeof window !== "undefined" ? window.location.origin : "https://meuamigobolsonaro.com.br"}`;
@@ -532,31 +469,9 @@ function Index() {
             {/* CTA Area */}
             <div className="mt-6">
               {step === "idle" && (
-                <div className="space-y-3">
-                  <UploadButton onClick={() => fileRef.current?.click()} />
-                  {isDevMode && (
-                    <div className="space-y-2">
-                      <button
-                        onClick={simulatePhotoUpload}
-                        className="w-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-dashed border-emerald-500/30 font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition text-xs cursor-pointer"
-                      >
-                        ⚡ Simular Envio e IA Scan (15s)
-                      </button>
-                      <button
-                        onClick={() => {
-                          setOriginalPreview(c.example);
-                          setGeneratedUrl(c.example);
-                          setStep("preview");
-                          setShowPayment(true);
-                          toast.info("Geração simulada com sucesso! Checkout aberto.");
-                        }}
-                        className="w-full bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-dashed border-amber-500/30 font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition text-xs cursor-pointer animate-pulse"
-                      >
-                        ⚡ Testar/Simular Checkout Rápido (Direto)
-                      </button>
-                    </div>
-                  )}
-                </div>
+              <div className="space-y-3">
+                <UploadButton onClick={() => fileRef.current?.click()} />
+              </div>
               )}
               {step === "generating" && (
                 <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
@@ -879,7 +794,6 @@ function Index() {
           total={total}
           onClose={() => setShowPayment(false)}
           onPaid={handlePaid}
-          isDevMode={isDevMode}
           generatedUrl={generatedUrl}
         />
       )}
@@ -887,7 +801,6 @@ function Index() {
         <UpsellModal 
           type="darkhorse"
           characterKey={character} 
-          isDevMode={isDevMode} 
           onClose={() => setActiveUpsell("grupo")} 
         />
       )}
@@ -895,60 +808,11 @@ function Index() {
         <UpsellModal 
           type="grupo"
           characterKey={character} 
-          isDevMode={isDevMode} 
           onClose={() => {
             setActiveUpsell(null);
             setShowCrossSellModal(true);
           }} 
         />
-      )}
-      {isDevMode && (step === "preview" || step === "paid") && (
-        <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 mt-4 space-y-2 text-xs">
-          <div className="font-bold text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
-            <span>🛠️ PAINEL DO DESENVOLVEDOR</span>
-          </div>
-          <div className="flex gap-2 flex-wrap">
-            {step === "preview" && (
-              <button
-                onClick={() => {
-                  setStep("paid");
-                  toast.success("Foto liberada via Painel Dev! 🎉");
-                }}
-                className="bg-amber-500 hover:bg-amber-600 text-white font-bold px-3 py-1.5 rounded-lg transition"
-              >
-                🔓 Liberar Foto Grátis
-              </button>
-            )}
-            <button
-              onClick={() => {
-                if (generatedUrl) {
-                  navigator.clipboard.writeText(generatedUrl);
-                  toast.success("URL copiada!");
-                }
-              }}
-              className="bg-muted hover:bg-muted/80 text-foreground font-semibold px-3 py-1.5 rounded-lg transition border border-border"
-            >
-              📋 Copiar URL
-            </button>
-            <button
-              onClick={() => {
-                if (isAdminLoggedIn) {
-                  setShowAdminPanel(true);
-                } else {
-                  setShowAdminLogin(true);
-                }
-              }}
-              className="bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold px-3 py-1.5 rounded-lg transition border border-slate-700"
-            >
-              ⚙️ Dashboard Admin (Logs)
-            </button>
-          </div>
-          {generatedUrl && (
-            <div className="text-[10px] text-muted-foreground break-all select-all font-mono">
-              <strong>URL:</strong> {generatedUrl}
-            </div>
-          )}
-        </div>
       )}
       {showCrossSellModal && (
         <CrossSellModal
@@ -958,28 +822,6 @@ function Index() {
             reset();
             setPromoPrice(4.99);
             toast.success(`Personagem alterado para ${CHARACTERS[charKey].short}! Desconto de Pós-Venda Ativo: R$ 4,99! 🇧🇷`);
-          }}
-        />
-      )}
-      {showAdminLogin && (
-        <AdminLoginModal
-          onClose={() => setShowAdminLogin(false)}
-          onSuccess={() => {
-            localStorage.setItem("admin_logged_in", "true");
-            setShowAdminLogin(false);
-            setIsAdminLoggedIn(true);
-            setShowAdminPanel(true);
-          }}
-        />
-      )}
-      {showAdminPanel && isAdminLoggedIn && (
-        <DevDashboardModal
-          onClose={() => setShowAdminPanel(false)}
-          onLogout={() => {
-            localStorage.removeItem("admin_logged_in");
-            setIsAdminLoggedIn(false);
-            setShowAdminPanel(false);
-            toast.success("Sessão admin encerrada. Até logo! 👋");
           }}
         />
       )}
@@ -1061,7 +903,6 @@ function PaymentModal({
   total,
   onClose,
   onPaid,
-  isDevMode,
   generatedUrl,
 }: {
   character: string;
@@ -1071,7 +912,6 @@ function PaymentModal({
   total: number;
   onClose: () => void;
   onPaid: () => void;
-  isDevMode: boolean;
   generatedUrl: string | null;
 }) {
   const callCreate = useServerFn(createPixCharge);
@@ -1428,17 +1268,6 @@ function PaymentModal({
                 <span className="font-semibold animate-pulse">Aguardando confirmação do pagamento…</span>
               </div>
 
-              {/* SIMULAR CONFIRMAÇÃO DE PAGAMENTO E ENTREGA */}
-              {isDevMode && (
-                <button
-                  type="button"
-                  onClick={onPaid}
-                  className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 text-xs shadow-md shadow-amber-500/20 cursor-pointer animate-pulse-slow transition active:scale-98"
-                >
-                  ⚡ Simular Confirmação e Entregar Imagem
-                </button>
-              )}
-
               <div className="text-[10px] text-center text-muted-foreground font-medium">
                 🔒 Liberação automática imediata. Não feche esta janela após pagar.
               </div>
@@ -1484,12 +1313,10 @@ function OrderBump({
 function UpsellModal({
   type,
   characterKey,
-  isDevMode,
   onClose,
 }: {
   type: "darkhorse" | "grupo";
   characterKey: CharKey;
-  isDevMode: boolean;
   onClose: (bought: boolean) => void;
 }) {
   const callCreate = useServerFn(createPixCharge);
@@ -1622,20 +1449,6 @@ function UpsellModal({
     }
   };
 
-  const simulateSuccess = () => {
-    toast.success(`${content.toastSuccess} (Simulado)`);
-    if (type === "darkhorse") {
-      const link = document.createElement("a");
-      link.href = content.downloadFile;
-      link.download = content.downloadName;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } else {
-      window.open(content.downloadFile, "_blank");
-    }
-    onClose(true);
-  };
 
   return (
     <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
@@ -1787,17 +1600,6 @@ function UpsellModal({
                 <Loader2 className="w-4.5 h-4.5 animate-spin text-[oklch(0.52_0.16_145)]" />
                 <span className="font-semibold animate-pulse">Aguardando confirmação do pagamento…</span>
               </div>
-
-              {/* SIMULAÇÃO DE PAGAMENTO DO UPSELL */}
-              {isDevMode && (
-                <button
-                  type="button"
-                  onClick={simulateSuccess}
-                  className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 text-xs shadow-md shadow-amber-500/20 cursor-pointer animate-pulse transition active:scale-98"
-                >
-                  {content.simulatedLabel}
-                </button>
-              )}
 
               <div className="text-[10px] text-center text-muted-foreground font-medium">
                 🔒 Liberação e download automático imediato. Não feche essa tela.
