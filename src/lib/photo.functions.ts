@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { saveGenerationToLog, readAllGenerations } from "@/lib/logging.server";
+import { saveGenerationToLog, readAllGenerations, getAdminStats } from "@/lib/logging.server";
 
 const inputSchema = z.object({
   imageBase64: z.string().min(100),
@@ -147,15 +147,28 @@ SCENE COMPOSITION & STYLE:
     }
     if (images.length === 0) throw new Error("A IA não retornou imagem.");
 
-    // Log the successful generation for this IP
+    const imgUrl = images[0];
+
+    // Log the successful generation for this IP in generations table
     try {
       await supabaseAdmin.from("generations").insert({ ip_address: ipAddress });
     } catch (logErr) {
-      console.error("Failed to log generation in DB", logErr);
+      console.error("Failed to log generation in public.generations", logErr);
     }
 
-    const imgUrl = images[0];
-    saveGenerationToLog(imgUrl, data.character, ipAddress);
+    // Log the successful generation in the public.orders table as a preview to enable pulling in the dashboard
+    try {
+      await supabaseAdmin.from("orders").insert({
+        external_id: `gen-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        amount: 0,
+        status: "generated_preview",
+        character: data.character,
+        generated_url: imgUrl,
+        ip_address: ipAddress,
+      });
+    } catch (logErr) {
+      console.error("Failed to log generation in public.orders", logErr);
+    }
 
     return { imageUrl: imgUrl };
   });
@@ -163,5 +176,7 @@ SCENE COMPOSITION & STYLE:
 export const getGenerationsLog = createServerFn({ method: "GET" })
   .handler(async () => {
     const logs = await readAllGenerations();
-    return { logs };
+    const stats = await getAdminStats();
+    return { logs, stats };
   });
+

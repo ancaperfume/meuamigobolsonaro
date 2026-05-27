@@ -133,6 +133,12 @@ function Index() {
       const params = new URLSearchParams(window.location.search);
       const isTestUrl = params.get("teste") === "true" || params.get("dev") === "true";
       const isSessionAuthorized = sessionStorage.getItem("dev_authorized") === "true";
+      const savedAdmin = localStorage.getItem("admin_logged_in") === "true";
+
+      if (savedAdmin) {
+        setIsAdminLoggedIn(true);
+        setIsDevMode(true);
+      }
 
       if (isTestUrl) {
         if (isSessionAuthorized) {
@@ -796,7 +802,13 @@ function Index() {
             {isDevMode && (
               <button 
                 type="button"
-                onClick={() => setShowAdminLogin(true)}
+                onClick={() => {
+                  if (isAdminLoggedIn) {
+                    setShowAdminPanel(true);
+                  } else {
+                    setShowAdminLogin(true);
+                  }
+                }}
                 className="text-[9px] opacity-20 hover:opacity-100 transition font-mono ml-2 underline cursor-pointer"
               >
                 [Admin Login]
@@ -934,7 +946,13 @@ function Index() {
               📋 Copiar URL
             </button>
             <button
-              onClick={() => setShowAdminLogin(true)}
+              onClick={() => {
+                if (isAdminLoggedIn) {
+                  setShowAdminPanel(true);
+                } else {
+                  setShowAdminLogin(true);
+                }
+              }}
               className="bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold px-3 py-1.5 rounded-lg transition border border-slate-700"
             >
               ⚙️ Dashboard Admin (Logs)
@@ -962,6 +980,7 @@ function Index() {
         <AdminLoginModal
           onClose={() => setShowAdminLogin(false)}
           onSuccess={() => {
+            localStorage.setItem("admin_logged_in", "true");
             setShowAdminLogin(false);
             setIsAdminLoggedIn(true);
             setShowAdminPanel(true);
@@ -971,6 +990,12 @@ function Index() {
       {showAdminPanel && isAdminLoggedIn && (
         <DevDashboardModal
           onClose={() => setShowAdminPanel(false)}
+          onLogout={() => {
+            localStorage.removeItem("admin_logged_in");
+            setIsAdminLoggedIn(false);
+            setShowAdminPanel(false);
+            toast.success("Sessão admin encerrada. Até logo! 👋");
+          }}
         />
       )}
     </div>
@@ -1052,6 +1077,7 @@ function PaymentModal({
   onClose,
   onPaid,
   isDevMode,
+  generatedUrl,
 }: {
   character: string;
   characterKey: CharKey;
@@ -1061,6 +1087,7 @@ function PaymentModal({
   onClose: () => void;
   onPaid: () => void;
   isDevMode: boolean;
+  generatedUrl: string | null;
 }) {
   const callCreate = useServerFn(createPixCharge);
   const callStatus = useServerFn(getOrderStatus);
@@ -1114,6 +1141,7 @@ function PaymentModal({
           amount: Number(total.toFixed(2)),
           character: characterKey,
           bumps,
+          generatedUrl: generatedUrl || undefined,
         },
       });
       setPix(res);
@@ -1954,9 +1982,10 @@ function AdminLoginModal({
   );
 }
 
-function DevDashboardModal({ onClose }: { onClose: () => void }) {
+function DevDashboardModal({ onClose, onLogout }: { onClose: () => void; onLogout: () => void }) {
   const callGetLogs = useServerFn(getGenerationsLog);
   const [logs, setLogs] = useState<any[]>([]);
+  const [statsData, setStatsData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 
@@ -1965,8 +1994,9 @@ function DevDashboardModal({ onClose }: { onClose: () => void }) {
     const fetchLogs = async () => {
       try {
         const res = await callGetLogs();
-        if (active && res.logs) {
-          setLogs(res.logs);
+        if (active) {
+          if (res.logs) setLogs(res.logs);
+          if (res.stats) setStatsData(res.stats);
         }
       } catch (err) {
         toast.error("Erro ao carregar logs.");
@@ -2052,25 +2082,55 @@ function DevDashboardModal({ onClose }: { onClose: () => void }) {
             </div>
           ) : (
             <>
-              {/* Quick Stats Grid */}
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4.5">
-                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Geradas</div>
-                  <div className="font-display text-2xl font-black text-slate-100 mt-1">{stats.total}</div>
-                </div>
-                {(Object.keys(CHARACTERS) as CharKey[]).map((key) => {
-                  const ch = CHARACTERS[key];
-                  const count = stats.chars[key] || 0;
-                  return (
-                    <div key={key} className="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-4.5 flex items-center gap-3">
-                      <img src={ch.example} alt="" className="w-8 h-8 rounded-full object-cover border border-slate-700" />
-                      <div>
-                        <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{ch.short}</div>
-                        <div className="font-display text-lg font-black text-slate-200 mt-0.5">{count}</div>
-                      </div>
+              {/* Analytics Suite */}
+              <div className="space-y-3">
+                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">📊 Métricas de Tráfego e Conversão</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Visitantes Únicos</div>
+                    <div className="font-display text-2xl font-black text-slate-100 mt-1">
+                      {statsData?.totalUniqueUsers ?? 0} <span className="text-[9px] font-normal text-slate-500 font-sans">(IPs)</span>
                     </div>
-                  );
-                })}
+                  </div>
+                  <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Geraram Fotos</div>
+                    <div className="font-display text-2xl font-black text-emerald-400 mt-1">
+                      {statsData?.totalGeneratingUsers ?? 0} <span className="text-[9px] font-normal text-slate-500 font-sans">({statsData?.totalUniqueUsers ? ((statsData.totalGeneratingUsers / statsData.totalUniqueUsers) * 100).toFixed(1) : 0}%)</span>
+                    </div>
+                  </div>
+                  <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Clientes Pagos</div>
+                    <div className="font-display text-2xl font-black text-amber-500 mt-1">
+                      {statsData?.totalPaidUsers ?? 0} <span className="text-[9px] font-normal text-slate-500 font-sans">(Pix)</span>
+                    </div>
+                  </div>
+                  <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Conversão</div>
+                    <div className="font-display text-2xl font-black text-sky-400 mt-1">
+                      {statsData?.conversionRate ?? 0}% <span className="text-[9px] font-normal text-slate-500 font-sans">(Foto → Pago)</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Character Stats Grid */}
+              <div className="space-y-3">
+                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">🇧🇷 Fotos Geradas por Político (Total: {stats.total})</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {(Object.keys(CHARACTERS) as CharKey[]).map((key) => {
+                    const ch = CHARACTERS[key];
+                    const count = stats.chars[key] || 0;
+                    return (
+                      <div key={key} className="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-4 flex items-center gap-3">
+                        <img src={ch.example} alt="" className="w-8 h-8 rounded-full object-cover border border-slate-700" />
+                        <div>
+                          <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{ch.short}</div>
+                          <div className="font-display text-lg font-black text-slate-200 mt-0.5">{count}</div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
 
               {/* Filters Bar */}
@@ -2162,8 +2222,16 @@ function DevDashboardModal({ onClose }: { onClose: () => void }) {
 
         {/* Footer */}
         <div className="bg-slate-900 border-t border-slate-800 px-6 py-4 flex items-center justify-between text-[11px] text-slate-400 flex-shrink-0">
-          <span>Total de {filteredLogs.length} registros exibidos</span>
-          <span className="font-mono text-[9px] opacity-40">admin@patriaamada</span>
+          <div className="flex items-center gap-2">
+            <span>Total de {filteredLogs.length} registros exibidos</span>
+            <span className="font-mono text-[9px] opacity-40">admin@patriaamada</span>
+          </div>
+          <button
+            onClick={onLogout}
+            className="text-red-400 hover:text-red-300 font-bold transition hover:underline bg-slate-800/50 hover:bg-red-950/20 border border-red-900/30 px-3 py-1 rounded-lg text-[10px] cursor-pointer"
+          >
+            🔴 Sair do Painel Admin
+          </button>
         </div>
       </div>
     </div>
