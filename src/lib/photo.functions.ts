@@ -118,12 +118,17 @@ SCENE COMPOSITION & STYLE:
 
     const imgUrl = images[0];
 
-    // Save to generation log (fire-and-forget)
-    saveGenerationToLog(imgUrl, data.character, ip).catch((e) =>
-      console.error("Failed to save generation log", e),
-    );
+    let logSaved = false;
+    let logError: string | null = null;
+    try {
+      await saveGenerationToLog(imgUrl, data.character, ip);
+      logSaved = true;
+    } catch (e: any) {
+      logError = e?.message ?? "Erro ao salvar log";
+      console.error("Failed to save generation log", e);
+    }
 
-    return { imageUrl: imgUrl };
+    return { imageUrl: imgUrl, logSaved, logError };
   });
 
 export const getGenerationsLog = createServerFn({ method: "GET" }).handler(async () => {
@@ -131,6 +136,20 @@ export const getGenerationsLog = createServerFn({ method: "GET" }).handler(async
   const stats = await getAdminStats();
   return { logs, stats };
 });
+
+const testLogSchema = z.object({
+  character: z.enum(["jair", "flavio", "michelle", "nikolas"]),
+  url: z.string().min(1),
+  status: z.string().optional(),
+});
+
+export const saveTestGenerationLog = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => testLogSchema.parse(data))
+  .handler(async ({ data, request }) => {
+    const ip = getClientIP(request);
+    await saveGenerationToLog(data.url, data.character, ip, data.status ?? "generated");
+    return { success: true };
+  });
 
 export const getUserPhotos = createServerFn({ method: "GET" }).handler(async ({ request }) => {
   const ip = getClientIP(request);

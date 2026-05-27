@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { generatePhoto, getGenerationsLog } from "@/lib/photo.functions";
+import { generatePhoto, getGenerationsLog, saveTestGenerationLog } from "@/lib/photo.functions";
 import { createPixCharge, getOrderStatus } from "@/lib/payment.functions";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
@@ -176,6 +176,7 @@ function AdminPage() {
 function AdminDashboard({ onLogout }: { onLogout: () => void }) {
   const callGetLogs = useServerFn(getGenerationsLog);
   const callGenerate = useServerFn(generatePhoto);
+  const callSaveTestLog = useServerFn(saveTestGenerationLog);
   const [logs, setLogs] = useState<any[]>([]);
   const [statsData, setStatsData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -848,29 +849,87 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                     <div className="admin-card p-5 space-y-3">
                       <h3 className="text-sm font-bold text-white flex items-center gap-2">
                         <Zap className="w-4 h-4 text-amber-400" />
-                        Ações Rápidas
+                        Simular Funil
                       </h3>
-                      <div className="space-y-2">
-                        <a
-                          href="/?teste=true"
-                          target="_blank"
-                          className="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition text-xs"
+                      <p className="text-[10px] text-zinc-600 leading-relaxed">
+                        Teste cada etapa do funil de vendas. Os logs aparecem em{" "}
+                        <strong className="text-zinc-400">Logs &amp; Fotos</strong>.
+                      </p>
+                      <div className="space-y-1.5">
+                        <button
+                          onClick={async () => {
+                            toast.info("Simulando visita...");
+                            window.open("/", "_blank");
+                          }}
+                          className="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold py-2.5 rounded-xl flex items-center justify-center gap-2 transition text-[11px] cursor-pointer"
                         >
-                          🌐 Abrir Site em Modo Dev
-                        </a>
-                        <a
-                          href="/"
-                          target="_blank"
-                          className="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition text-xs"
+                          👁️ Simular Visita ao Site
+                        </button>
+                        <button
+                          onClick={async () => {
+                            const char = testCharacter;
+                            const ch = CHARACTERS[char];
+                            toast.info(`Inserindo log de geração para ${ch.name}...`);
+                            try {
+                              await callSaveTestLog({
+                                data: { character: char, url: ch.example, status: "generated" },
+                              });
+                              toast.success(`Log de geração inserido! ✅`);
+                              fetchData();
+                            } catch (e: any) {
+                              toast.error(`Erro: ${e?.message}`);
+                            }
+                          }}
+                          className="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold py-2.5 rounded-xl flex items-center justify-center gap-2 transition text-[11px] cursor-pointer"
                         >
-                          👁️ Abrir Site (Visão do Cliente)
-                        </a>
+                          <Camera className="w-3.5 h-3.5" /> Simular Geração de Foto
+                        </button>
+                        <button
+                          onClick={async () => {
+                            const char = testCharacter;
+                            const ch = CHARACTERS[char];
+                            toast.info(`Simulando pedido PIX para ${ch.name}...`);
+                            try {
+                              await callSaveTestLog({
+                                data: { character: char, url: ch.example, status: "pending" },
+                              });
+                              toast.success(`Log de pedido PIX inserido! 💳`);
+                              fetchData();
+                            } catch (e: any) {
+                              toast.error(`Erro: ${e?.message}`);
+                            }
+                          }}
+                          className="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold py-2.5 rounded-xl flex items-center justify-center gap-2 transition text-[11px] cursor-pointer"
+                        >
+                          💳 Simular Pagamento (PIX)
+                        </button>
+                        <button
+                          onClick={async () => {
+                            const char = testCharacter;
+                            const ch = CHARACTERS[char];
+                            toast.info(`Simulando confirmação de pagamento...`);
+                            try {
+                              await callSaveTestLog({
+                                data: { character: char, url: ch.example, status: "paid" },
+                              });
+                              toast.success(`Log de pagamento confirmado! 🎉`);
+                              fetchData();
+                            } catch (e: any) {
+                              toast.error(`Erro: ${e?.message}`);
+                            }
+                          }}
+                          className="w-full bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white border border-emerald-500/20 font-bold py-2.5 rounded-xl flex items-center justify-center gap-2 transition text-[11px] cursor-pointer"
+                        >
+                          <Check className="w-3.5 h-3.5" /> Simular Webhook (Pago)
+                        </button>
+                      </div>
+                      <div className="pt-1 border-t border-zinc-800/30">
                         <button
                           onClick={() => {
                             fetchData();
                             toast.success("Dados atualizados! 🔄");
                           }}
-                          className="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition text-xs cursor-pointer"
+                          className="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold py-2.5 rounded-xl flex items-center justify-center gap-2 transition text-[11px] cursor-pointer"
                         >
                           <RefreshCw className="w-3.5 h-3.5" /> Recarregar Dados
                         </button>

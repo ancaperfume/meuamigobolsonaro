@@ -6,16 +6,15 @@ export async function saveGenerationToLog(
   ip: string,
   status = "generated",
 ) {
-  try {
-    const { error } = await supabaseAdmin.from("generations").insert({
-      ip_address: ip,
-      url,
-      character,
-      status,
-    });
-    if (error) console.error("Failed to save generation to Supabase", error);
-  } catch (err) {
-    console.error("Failed to save generation log", err);
+  const { error } = await supabaseAdmin.from("generations").insert({
+    ip_address: ip,
+    url,
+    character,
+    status,
+  });
+  if (error) {
+    console.error("Failed to save generation to Supabase", error);
+    throw error;
   }
 }
 
