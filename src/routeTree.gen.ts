@@ -9,9 +9,15 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiPublicNexuspagWebhookRouteImport } from './routes/api/public/nexuspag-webhook'
 
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -26,32 +32,43 @@ const ApiPublicNexuspagWebhookRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/api/public/nexuspag-webhook': typeof ApiPublicNexuspagWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/api/public/nexuspag-webhook': typeof ApiPublicNexuspagWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/api/public/nexuspag-webhook': typeof ApiPublicNexuspagWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/api/public/nexuspag-webhook'
+  fullPaths: '/' | '/admin' | '/api/public/nexuspag-webhook'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/api/public/nexuspag-webhook'
-  id: '__root__' | '/' | '/api/public/nexuspag-webhook'
+  to: '/' | '/admin' | '/api/public/nexuspag-webhook'
+  id: '__root__' | '/' | '/admin' | '/api/public/nexuspag-webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRoute
   ApiPublicNexuspagWebhookRoute: typeof ApiPublicNexuspagWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -71,6 +88,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRoute,
   ApiPublicNexuspagWebhookRoute: ApiPublicNexuspagWebhookRoute,
 }
 export const routeTree = rootRouteImport

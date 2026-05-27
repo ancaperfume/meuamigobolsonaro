@@ -799,21 +799,6 @@ function Index() {
           <div className="flex items-center justify-center gap-2 mb-2">
             <Heart className="w-3 h-3 text-[oklch(0.52_0.16_145)]" />
             Feito por brasileiros, para brasileiros.
-            {isDevMode && (
-              <button 
-                type="button"
-                onClick={() => {
-                  if (isAdminLoggedIn) {
-                    setShowAdminPanel(true);
-                  } else {
-                    setShowAdminLogin(true);
-                  }
-                }}
-                className="text-[9px] opacity-20 hover:opacity-100 transition font-mono ml-2 underline cursor-pointer"
-              >
-                [Admin Login]
-              </button>
-            )}
           </div>
           <div>Site não oficial, sem vínculo com nenhuma pessoa pública. Imagens geradas por IA com fins de entretenimento.</div>
         </footer>
