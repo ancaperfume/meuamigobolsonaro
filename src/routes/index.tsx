@@ -10,6 +10,11 @@ import { Loader2, Upload, Lock, Check, ShieldCheck, Heart, Sparkles, X, Copy, Sm
 declare global {
   interface Window {
     fbq?: (...args: any[]) => void;
+    ttq?: {
+      track: (event: string, parameters?: any) => void;
+      page: () => void;
+      load: (id: string) => void;
+    };
   }
 }
 
@@ -262,6 +267,12 @@ function Index() {
             content_category: "Visualização de Foto com IA",
           });
         }
+        if (typeof window !== "undefined" && window.ttq) {
+          window.ttq.track("ViewContent", {
+            content_name: `Foto com ${character}`,
+            content_category: "Visualização de Foto com IA",
+          });
+        }
       } catch (e: any) {
         toast.error(e?.message ?? "Não foi possível gerar a foto.");
         setStep("idle");
@@ -294,6 +305,10 @@ function Index() {
     // Meta Pixel — Purchase event
     if (typeof window !== "undefined" && window.fbq) {
       window.fbq("track", "Purchase", { value: total, currency: "BRL" });
+    }
+    if (typeof window !== "undefined" && window.ttq) {
+      window.ttq.track("CompletePayment", { value: total, currency: "BRL" });
+      window.ttq.track("Purchase", { value: total, currency: "BRL" });
     }
   }, [bumps, total]);
 
@@ -1072,6 +1087,9 @@ function PaymentModal({
       if (typeof window !== "undefined" && window.fbq) {
         window.fbq("track", "InitiateCheckout", { value: total, currency: "BRL" });
       }
+      if (typeof window !== "undefined" && window.ttq) {
+        window.ttq.track("InitiateCheckout", { value: total, currency: "BRL" });
+      }
     } catch (e: any) {
       toast.error(e?.message ?? "Falha ao gerar o Pix.");
     } finally {
@@ -1532,6 +1550,9 @@ function UpsellModal({
       setPhase("pix");
       if (typeof window !== "undefined" && window.fbq) {
         window.fbq("track", "InitiateCheckout", { value: 27.00, currency: "BRL" });
+      }
+      if (typeof window !== "undefined" && window.ttq) {
+        window.ttq.track("InitiateCheckout", { value: 27.00, currency: "BRL" });
       }
     } catch (e: any) {
       toast.error(e?.message ?? `Falha ao gerar o Pix: ${content.btnLoadingLabel}`);

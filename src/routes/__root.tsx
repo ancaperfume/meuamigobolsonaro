@@ -10,9 +10,11 @@ import {
 
 import appCss from "../styles.css?url";
 
-// 👉 Cole aqui seu Meta Pixel ID (somente números, ex: "123456789012345")
-//    Quando vazio, nenhum script é carregado.
 const META_PIXEL_ID = "27126474183629240";
+
+// 👉 Cole aqui seu TikTok Pixel ID (ex: "C39HB48J098UY76H5G20")
+//    Quando vazio, nenhum script é carregado.
+const TIKTOK_PIXEL_ID = "";
 
 function NotFoundComponent() {
   return (
@@ -133,6 +135,17 @@ fbq('track', 'PageView');`,
               />
             </noscript>
           </>
+        )}
+        {TIKTOK_PIXEL_ID && (
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `!function (w, d, t) {
+  w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie","holdConsent","revokeConsent","grantConsent"],ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(var e=w[t]._rgba||[],n=0;n<e.length;n++)ttq.setAndDefer(ttq,e[n]);return ttq},ttq.load=function(e,n){var o="https://analytics.tiktok.com/i18n/pixel/events.js";ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=o,ttq._t=ttq._t||[],ttq._t.push(e),ttq._o=ttq._o||{},ttq._o[e]=n||{};var c=d.createElement("script");c.type="text/javascript",c.async=!0,c.src=o+"?sdkid="+e+"&lib="+t;var a=d.getElementsByTagName("script")[0];a.parentNode.insertBefore(c,a)};
+  ttq.load('${TIKTOK_PIXEL_ID}');
+  ttq.page();
+}(window, document, 'ttq');`,
+            }}
+          />
         )}
       </head>
       <body>
