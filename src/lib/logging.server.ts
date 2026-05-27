@@ -1,85 +1,109 @@
-import * as fs from "fs";
-import * as path from "path";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
-const logPath = path.resolve(process.cwd(), "generations_log.json");
-
-export function saveGenerationToLog(url: string, character: string, ip: string) {
+export async function saveGenerationToLog(
+  url: string,
+  character: string,
+  ip: string,
+  status = "generated",
+) {
   try {
-    let logs = [];
-    if (fs.existsSync(logPath)) {
-      const fileContent = fs.readFileSync(logPath, "utf-8");
-      if (fileContent.trim()) {
-        logs = JSON.parse(fileContent);
-      }
-    }
-    logs.push({
+    const { error } = await supabaseAdmin.from("generations").insert({
+      ip_address: ip,
       url,
       character,
-      ip,
-      timestamp: new Date().toISOString(),
+      status,
     });
-    // Limit logs to last 1000 items
-    if (logs.length > 1000) logs = logs.slice(-1000);
-    fs.writeFileSync(logPath, JSON.stringify(logs, null, 2), "utf-8");
-  } catch (logErr) {
-    console.error("Failed to write local generations log", logErr);
+    if (error) console.error("Failed to save generation to Supabase", error);
+  } catch (err) {
+    console.error("Failed to save generation log", err);
   }
 }
 
 export async function readAllGenerations() {
-  let localLogs = [];
+  const generations: {
+    url: string;
+    character: string;
+    ip: string;
+    timestamp: string;
+    status: string;
+  }[] = [];
+
+  // 1. Read from Supabase generations table
   try {
-    if (fs.existsSync(logPath)) {
-      const fileContent = fs.readFileSync(logPath, "utf-8");
-      if (fileContent.trim()) {
-        localLogs = JSON.parse(fileContent);
+    const { data: genRows, error: genErr } = await supabaseAdmin
+      .from("generations")
+      .select("url, character, ip_address, created_at, status")
+      .order("created_at", { ascending: false });
+    if (!genErr && genRows) {
+      for (const row of genRows) {
+        generations.push({
+          url: row.url || "",
+          character: row.character || "",
+          ip: row.ip_address,
+          timestamp: row.created_at,
+          status: row.status,
+        });
       }
+    } else if (genErr) {
+      console.error("Error reading generations table", genErr);
     }
   } catch (e) {
-    console.error("Failed to read local generations log", e);
+    console.error("Failed to read generations from Supabase", e);
   }
 
-  // De-duplicate by URL to prevent duplicates
-  const uniqueMap = new Map();
-  for (const item of localLogs) {
-    if (item.url && !uniqueMap.has(item.url)) {
-      uniqueMap.set(item.url, item);
+  // 2. Merge orders that have generated_url (paid orders with images)
+  try {
+    const { data: orderRows, error: orderErr } = await supabaseAdmin
+      .from("orders")
+      .select("character, generated_url, created_at, status, ip_address")
+      .not("generated_url", "is", null)
+      .order("created_at", { ascending: false });
+    if (!orderErr && orderRows) {
+      for (const row of orderRows) {
+        // Avoid duplicates by URL
+        const exists = generations.some((g) => g.url === row.generated_url);
+        if (!exists && row.generated_url) {
+          generations.push({
+            url: row.generated_url,
+            character: row.character || "",
+            ip: row.ip_address || "",
+            timestamp: row.created_at,
+            status: row.status === "paid" ? "paid" : "generated",
+          });
+        }
+      }
+    } else if (orderErr) {
+      console.error("Error reading orders table", orderErr);
     }
+  } catch (e) {
+    console.error("Failed to read orders from Supabase", e);
   }
 
-  return Array.from(uniqueMap.values());
+  // Sort newest first
+  generations.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+
+  return generations;
 }
 
 export async function getAdminStats() {
   try {
-    const { data: allOrders, error } = await supabaseAdmin
-      .from("orders")
-      .select("status, generated_url");
+    // Count unique IPs from generations table
+    const { data: genIPs, error: genErr } = await supabaseAdmin
+      .from("generations")
+      .select("ip_address");
 
-    if (error) {
-      console.error("Error fetching all orders for stats", error);
-    }
+    if (genErr) console.error("Error fetching generations for stats", genErr);
 
-    // Read local logs IP
-    let localIPs: string[] = [];
-    try {
-      if (fs.existsSync(logPath)) {
-        const fileContent = fs.readFileSync(logPath, "utf-8");
-        if (fileContent.trim()) {
-          const localLogs = JSON.parse(fileContent);
-          localIPs = localLogs.map((l: any) => l.ip).filter(Boolean);
-        }
-      }
-    } catch (e) {
-      console.warn("Failed to read local logs for stats", e);
-    }
-
-    const allIPs = new Set<string>(localIPs);
-
+    const allIPs = new Set<string>((genIPs || []).map((r: any) => r.ip_address).filter(Boolean));
     const totalUniqueUsers = allIPs.size;
+    const totalGeneratingUsers = genIPs?.length ?? 0;
 
-    const totalGeneratingUsers = localIPs.length;
+    // Count paid orders
+    const { data: allOrders, error: orderErr } = await supabaseAdmin
+      .from("orders")
+      .select("status");
+
+    if (orderErr) console.error("Error fetching orders for stats", orderErr);
 
     const totalPaidUsers = allOrders?.filter((o: any) => o.status === "paid").length ?? 0;
 
@@ -87,7 +111,10 @@ export async function getAdminStats() {
       totalUniqueUsers,
       totalGeneratingUsers,
       totalPaidUsers,
-      conversionRate: totalGeneratingUsers > 0 ? Number(((totalPaidUsers / totalGeneratingUsers) * 100).toFixed(2)) : 0
+      conversionRate:
+        totalGeneratingUsers > 0
+          ? Number(((totalPaidUsers / totalGeneratingUsers) * 100).toFixed(2))
+          : 0,
     };
   } catch (err) {
     console.error("Failed to compute admin stats", err);
@@ -95,7 +122,7 @@ export async function getAdminStats() {
       totalUniqueUsers: 0,
       totalGeneratingUsers: 0,
       totalPaidUsers: 0,
-      conversionRate: 0
+      conversionRate: 0,
     };
   }
 }

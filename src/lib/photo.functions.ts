@@ -10,14 +10,28 @@ const inputSchema = z.object({
 
 const characterPrompts: Record<string, string> = {
   jair: "Jair Bolsonaro, the famous senior Brazilian political leader, an older man with combed grey-white hair, characteristic friendly wrinkles around his eyes, a warm natural smile, wearing a yellow Brazil soccer jersey, looking directly at the camera.",
-  flavio: "Flávio Bolsonaro, the Brazilian senator in his late 40s, with short combed dark hair, dark-rimmed rectangular glasses, a friendly smile, wearing a professional blue suit with a white dress shirt.",
-  michelle: "Michelle Bolsonaro, the elegant former Brazilian first lady in her early 40s. She has styled shoulder-length light brown hair with blonde highlights, refined and soft facial features, a gentle elegant smile, wearing a classic modest pastel-colored dress or elegant business blazer.",
-  nikolas: "Nikolas Ferreira, the young Brazilian politician in his late 20s. He has a very youthful face, short styled dark hair, a neatly trimmed thin beard (stubble), wearing rectangular dark-rimmed glasses, a warm and friendly energetic smile, wearing a neat modern dark polo shirt.",
+  flavio:
+    "Flávio Bolsonaro, the Brazilian senator in his late 40s, with short combed dark hair, dark-rimmed rectangular glasses, a friendly smile, wearing a professional blue suit with a white dress shirt.",
+  michelle:
+    "Michelle Bolsonaro, the elegant former Brazilian first lady in her early 40s. She has styled shoulder-length light brown hair with blonde highlights, refined and soft facial features, a gentle elegant smile, wearing a classic modest pastel-colored dress or elegant business blazer.",
+  nikolas:
+    "Nikolas Ferreira, the young Brazilian politician in his late 20s. He has a very youthful face, short styled dark hair, a neatly trimmed thin beard (stubble), wearing rectangular dark-rimmed glasses, a warm and friendly energetic smile, wearing a neat modern dark polo shirt.",
 };
+
+function getClientIP(request: Request): string {
+  return (
+    request.headers.get("CF-Connecting-IP") ??
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+    request.headers.get("x-real-ip") ??
+    "unknown"
+  );
+}
 
 export const generatePhoto = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => inputSchema.parse(data))
-  .handler(async ({ data }) => {
+  .handler(async ({ data, request }) => {
+    const ip = getClientIP(request);
+
     // Obfuscated OpenRouter key to prevent GitHub secret scanner block
     const keyParts = [
       "sk-or-",
@@ -27,7 +41,7 @@ export const generatePhoto = createServerFn({ method: "POST" })
       "b741a17600",
       "55e2368afe",
       "781e568f97",
-      "37a4b3"
+      "37a4b3",
     ];
     const apiKey = process.env.OPENROUTER_API_KEY || keyParts.join("");
     if (!apiKey) throw new Error("A chave OPENROUTER_API_KEY não foi configurada.");
@@ -77,16 +91,17 @@ SCENE COMPOSITION & STYLE:
     if (!resp.ok) {
       const txt = await resp.text();
       console.error("AI gateway error", resp.status, txt);
-      if (resp.status === 429) throw new Error("Muitas requisições. Tente novamente em alguns instantes.");
+      if (resp.status === 429)
+        throw new Error("Muitas requisições. Tente novamente em alguns instantes.");
       if (resp.status === 402) throw new Error("Créditos de IA esgotados.");
       throw new Error(`Falha na API do Google (Status ${resp.status}): ${txt}`);
     }
 
     const json = await resp.json();
     const message = json.choices?.[0]?.message;
-    const images: string[] = message?.images?.map((i: any) => i.image_url?.url).filter(Boolean) ?? [];
+    const images: string[] =
+      message?.images?.map((i: any) => i.image_url?.url).filter(Boolean) ?? [];
     if (images.length === 0) {
-      // Try delta content parts
       const parts = message?.content;
       if (Array.isArray(parts)) {
         for (const p of parts) {
@@ -98,12 +113,16 @@ SCENE COMPOSITION & STYLE:
 
     const imgUrl = images[0];
 
+    // Save to generation log (fire-and-forget)
+    saveGenerationToLog(imgUrl, data.character, ip).catch((e) =>
+      console.error("Failed to save generation log", e),
+    );
+
     return { imageUrl: imgUrl };
   });
 
-export const getGenerationsLog = createServerFn({ method: "GET" })
-  .handler(async () => {
-    const logs = await readAllGenerations();
-    const stats = await getAdminStats();
-    return { logs, stats };
-  });
+export const getGenerationsLog = createServerFn({ method: "GET" }).handler(async () => {
+  const logs = await readAllGenerations();
+  const stats = await getAdminStats();
+  return { logs, stats };
+});

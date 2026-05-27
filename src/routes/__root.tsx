@@ -81,17 +81,34 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "Meu Amigo Bolsonaro" },
       { name: "facebook-domain-verification", content: "SEU_CODIGO_AQUI" },
-      { name: "description", content: "Create AI-generated photos with Brazilian political figures." },
+      {
+        name: "description",
+        content: "Create AI-generated photos with Brazilian political figures.",
+      },
       { name: "author", content: "Lovable" },
       { property: "og:title", content: "Meu Amigo Bolsonaro" },
-      { property: "og:description", content: "Create AI-generated photos with Brazilian political figures." },
+      {
+        property: "og:description",
+        content: "Create AI-generated photos with Brazilian political figures.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
       { name: "twitter:title", content: "Meu Amigo Bolsonaro" },
-      { name: "twitter:description", content: "Create AI-generated photos with Brazilian political figures." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/dd6b2bed-4234-4864-9e8d-81396c893276/id-preview-ad4563a5--14abfb64-7c25-4b6e-b573-5a86b49933f1.lovable.app-1779814464564.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/dd6b2bed-4234-4864-9e8d-81396c893276/id-preview-ad4563a5--14abfb64-7c25-4b6e-b573-5a86b49933f1.lovable.app-1779814464564.png" },
+      {
+        name: "twitter:description",
+        content: "Create AI-generated photos with Brazilian political figures.",
+      },
+      {
+        property: "og:image",
+        content:
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/dd6b2bed-4234-4864-9e8d-81396c893276/id-preview-ad4563a5--14abfb64-7c25-4b6e-b573-5a86b49933f1.lovable.app-1779814464564.png",
+      },
+      {
+        name: "twitter:image",
+        content:
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/dd6b2bed-4234-4864-9e8d-81396c893276/id-preview-ad4563a5--14abfb64-7c25-4b6e-b573-5a86b49933f1.lovable.app-1779814464564.png",
+      },
     ],
     links: [
       {
@@ -161,16 +178,47 @@ function RootComponent() {
     if (TIKTOK_PIXEL_ID && !w.ttq) {
       w.TiktokAnalyticsObject = "ttq";
       const ttq: any = (w.ttq = w.ttq || []);
-      ttq.methods = ["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie","holdConsent","revokeConsent","grantConsent"];
-      ttq.setAndDefer = function (t: any, e: any) { t[e] = function () { t.push([e].concat(Array.prototype.slice.call(arguments, 0))); }; };
+      ttq.methods = [
+        "page",
+        "track",
+        "identify",
+        "instances",
+        "debug",
+        "on",
+        "off",
+        "once",
+        "ready",
+        "alias",
+        "group",
+        "enableCookie",
+        "disableCookie",
+        "holdConsent",
+        "revokeConsent",
+        "grantConsent",
+      ];
+      ttq.setAndDefer = function (t: any, e: any) {
+        t[e] = function () {
+          t.push([e].concat(Array.prototype.slice.call(arguments, 0)));
+        };
+      };
       for (let i = 0; i < ttq.methods.length; i++) ttq.setAndDefer(ttq, ttq.methods[i]);
-      ttq.instance = function (t: any) { const e = w[t]?._rgba || []; for (let n = 0; n < e.length; n++) ttq.setAndDefer(ttq, e[n]); return ttq; };
+      ttq.instance = function (t: any) {
+        const e = w[t]?._rgba || [];
+        for (let n = 0; n < e.length; n++) ttq.setAndDefer(ttq, e[n]);
+        return ttq;
+      };
       ttq.load = function (e: any, n: any) {
         const o = "https://analytics.tiktok.com/i18n/pixel/events.js";
-        ttq._i = ttq._i || {}; ttq._i[e] = []; ttq._i[e]._u = o;
-        ttq._t = ttq._t || []; ttq._t.push(e);
-        ttq._o = ttq._o || {}; ttq._o[e] = n || {};
-        const c = document.createElement("script"); c.type = "text/javascript"; c.async = true;
+        ttq._i = ttq._i || {};
+        ttq._i[e] = [];
+        ttq._i[e]._u = o;
+        ttq._t = ttq._t || [];
+        ttq._t.push(e);
+        ttq._o = ttq._o || {};
+        ttq._o[e] = n || {};
+        const c = document.createElement("script");
+        c.type = "text/javascript";
+        c.async = true;
         c.src = o + "?sdkid=" + e + "&lib=ttq";
         const a = document.getElementsByTagName("script")[0];
         a?.parentNode?.insertBefore(c, a);

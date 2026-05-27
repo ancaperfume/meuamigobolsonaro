@@ -6,10 +6,27 @@ import { createPixCharge, getOrderStatus } from "@/lib/payment.functions";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import {
-  Loader2, X, Check, ShieldCheck, Sparkles, Lock,
-  Upload, Copy, RefreshCw, LogOut, Eye, Download,
-  Users, Camera, CreditCard, TrendingUp, BarChart3,
-  Zap, ChevronRight, AlertCircle, CheckCircle2,
+  Loader2,
+  X,
+  Check,
+  ShieldCheck,
+  Sparkles,
+  Lock,
+  Upload,
+  Copy,
+  RefreshCw,
+  LogOut,
+  Eye,
+  Download,
+  Users,
+  Camera,
+  CreditCard,
+  TrendingUp,
+  BarChart3,
+  Zap,
+  ChevronRight,
+  AlertCircle,
+  CheckCircle2,
 } from "lucide-react";
 
 import exampleJair from "@/assets/example-jair.jpg";
@@ -29,16 +46,34 @@ export const Route = createFileRoute("/admin")({
 
 type CharKey = "jair" | "flavio" | "michelle" | "nikolas";
 
-const CHARACTERS: Record<CharKey, {
-  name: string;
-  short: string;
-  example: string;
-  color: string;
-}> = {
+const CHARACTERS: Record<
+  CharKey,
+  {
+    name: string;
+    short: string;
+    example: string;
+    color: string;
+  }
+> = {
   jair: { name: "Jair Bolsonaro", short: "Jair", example: exampleJair, color: "text-yellow-400" },
-  flavio: { name: "Flávio Bolsonaro", short: "Flávio", example: exampleFlavio, color: "text-blue-400" },
-  michelle: { name: "Michelle Bolsonaro", short: "Michelle", example: exampleMichelle, color: "text-pink-400" },
-  nikolas: { name: "Nikolas Ferreira", short: "Nikolas", example: exampleNikolas, color: "text-green-400" },
+  flavio: {
+    name: "Flávio Bolsonaro",
+    short: "Flávio",
+    example: exampleFlavio,
+    color: "text-blue-400",
+  },
+  michelle: {
+    name: "Michelle Bolsonaro",
+    short: "Michelle",
+    example: exampleMichelle,
+    color: "text-pink-400",
+  },
+  nikolas: {
+    name: "Nikolas Ferreira",
+    short: "Nikolas",
+    example: exampleNikolas,
+    color: "text-green-400",
+  },
 };
 
 const ADMIN_PASSWORD = "patriaamada";
@@ -81,11 +116,15 @@ function AdminPage() {
     return (
       <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center p-4">
         <Toaster richColors position="top-center" />
-        <style dangerouslySetInnerHTML={{__html: `
+        <style
+          dangerouslySetInnerHTML={{
+            __html: `
           @keyframes glow { 0%,100% { box-shadow: 0 0 20px rgba(139,92,246,0.3); } 50% { box-shadow: 0 0 40px rgba(139,92,246,0.6); } }
           .glow-box { animation: glow 3s ease-in-out infinite; }
           body { background: #0a0a0f; }
-        `}} />
+        `,
+          }}
+        />
         <div className="w-full max-w-sm">
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-violet-500/10 border border-violet-500/20 mb-4 glow-box">
@@ -99,10 +138,13 @@ function AdminPage() {
               <input
                 type="password"
                 value={password}
-                onChange={(e) => { setPassword(e.target.value); setLoginError(false); }}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setLoginError(false);
+                }}
                 placeholder="Digite a senha de acesso"
                 autoFocus
-                className={`w-full bg-zinc-900/80 border ${loginError ? 'border-red-500/50' : 'border-zinc-800'} focus:border-violet-500 rounded-xl py-3.5 px-4 text-sm text-white outline-none transition placeholder:text-zinc-600`}
+                className={`w-full bg-zinc-900/80 border ${loginError ? "border-red-500/50" : "border-zinc-800"} focus:border-violet-500 rounded-xl py-3.5 px-4 text-sm text-white outline-none transition placeholder:text-zinc-600`}
               />
               {loginError && (
                 <p className="text-red-400 text-xs mt-2 flex items-center gap-1">
@@ -162,13 +204,17 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
     }
   }, [callGetLogs]);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const charStats = useMemo(() => {
     const total = logs.length;
     const chars: Record<string, number> = {};
-    const paidCount = logs.filter(l => l.status === "paid").length;
-    logs.forEach((l) => { chars[l.character] = (chars[l.character] || 0) + 1; });
+    const paidCount = logs.filter((l) => l.status === "paid").length;
+    logs.forEach((l) => {
+      chars[l.character] = (chars[l.character] || 0) + 1;
+    });
     return { total, chars, paidCount };
   }, [logs]);
 
@@ -176,7 +222,8 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
     const s = search.toLowerCase().trim();
     if (!s) return logs;
     return logs.filter((l) => {
-      const charName = CHARACTERS[l.character as CharKey]?.name?.toLowerCase() || l.character?.toLowerCase() || "";
+      const charName =
+        CHARACTERS[l.character as CharKey]?.name?.toLowerCase() || l.character?.toLowerCase() || "";
       const ip = (l.ip || "").toLowerCase();
       const dateStr = new Date(l.timestamp).toLocaleString("pt-BR").toLowerCase();
       const status = (l.status || "").toLowerCase();
@@ -188,10 +235,15 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
     try {
       return new Date(isoString).toLocaleString("pt-BR", {
         timeZone: "America/Sao_Paulo",
-        day: "2-digit", month: "2-digit", year: "numeric",
-        hour: "2-digit", minute: "2-digit",
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
       });
-    } catch { return isoString; }
+    } catch {
+      return isoString;
+    }
   };
 
   const handleDownload = (url: string, char: string) => {
@@ -205,29 +257,40 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
   };
 
   // --- TEST PANEL ---
-  const handleTestFile = useCallback(async (file: File) => {
-    if (!file.type.startsWith("image/")) { toast.error("Envie uma imagem."); return; }
-    if (file.size > 8 * 1024 * 1024) { toast.error("Máximo 8MB."); return; }
-    const reader = new FileReader();
-    reader.onload = async () => {
-      const dataUrl = reader.result as string;
-      setTestPreview(dataUrl);
-      const base64 = dataUrl.split(",")[1];
-      setTestStep("generating");
-      toast.info("Gerando foto real via IA...");
-      try {
-        const res = await callGenerate({ data: { imageBase64: base64, mimeType: file.type, character: testCharacter } });
-        setTestGeneratedUrl(res.imageUrl);
-        setTestStep("preview");
-        toast.success("Foto gerada com sucesso! ✅");
-        fetchData(); // Refresh logs
-      } catch (e: any) {
-        toast.error(e?.message ?? "Erro na geração.");
-        setTestStep("idle");
+  const handleTestFile = useCallback(
+    async (file: File) => {
+      if (!file.type.startsWith("image/")) {
+        toast.error("Envie uma imagem.");
+        return;
       }
-    };
-    reader.readAsDataURL(file);
-  }, [callGenerate, testCharacter, fetchData]);
+      if (file.size > 8 * 1024 * 1024) {
+        toast.error("Máximo 8MB.");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const dataUrl = reader.result as string;
+        setTestPreview(dataUrl);
+        const base64 = dataUrl.split(",")[1];
+        setTestStep("generating");
+        toast.info("Gerando foto real via IA...");
+        try {
+          const res = await callGenerate({
+            data: { imageBase64: base64, mimeType: file.type, character: testCharacter },
+          });
+          setTestGeneratedUrl(res.imageUrl);
+          setTestStep("preview");
+          toast.success("Foto gerada com sucesso! ✅");
+          fetchData(); // Refresh logs
+        } catch (e: any) {
+          toast.error(e?.message ?? "Erro na geração.");
+          setTestStep("idle");
+        }
+      };
+      reader.readAsDataURL(file);
+    },
+    [callGenerate, testCharacter, fetchData],
+  );
 
   const handleTestSimulate = () => {
     const ch = CHARACTERS[testCharacter];
@@ -264,14 +327,18 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-zinc-100">
       <Toaster richColors position="top-center" />
-      <style dangerouslySetInnerHTML={{__html: `
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
         body { background: #0a0a0f; }
         .admin-card { background: rgba(24,24,32,0.8); border: 1px solid rgba(63,63,70,0.3); border-radius: 16px; }
         .admin-card:hover { border-color: rgba(63,63,70,0.5); }
         .stat-glow { box-shadow: inset 0 1px 0 rgba(255,255,255,0.03); }
         @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
         .fade-up { animation: fadeUp 0.3s ease-out forwards; }
-      `}} />
+      `,
+        }}
+      />
 
       {/* TOP NAV */}
       <nav className="sticky top-0 z-50 bg-[#0a0a0f]/95 backdrop-blur-xl border-b border-zinc-800/50">
@@ -287,11 +354,14 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
           </div>
           <div className="flex items-center gap-2">
             <button
-              onClick={() => { fetchData(); toast.info("Atualizando..."); }}
+              onClick={() => {
+                fetchData();
+                toast.info("Atualizando...");
+              }}
               disabled={refreshing}
               className="p-2 rounded-lg hover:bg-zinc-800/50 text-zinc-400 hover:text-white transition cursor-pointer disabled:opacity-40"
             >
-              <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
             </button>
             <a
               href="/"
@@ -318,8 +388,8 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 px-4 py-3 text-xs font-bold transition cursor-pointer border-b-2 -mb-[1px] ${
                 activeTab === tab.id
-                  ? 'text-violet-400 border-violet-500'
-                  : 'text-zinc-500 hover:text-zinc-300 border-transparent'
+                  ? "text-violet-400 border-violet-500"
+                  : "text-zinc-500 hover:text-zinc-300 border-transparent"
               }`}
             >
               <tab.icon className="w-3.5 h-3.5" />
@@ -343,40 +413,60 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
               <div className="space-y-6 fade-up">
                 {/* Traffic Stats */}
                 <div>
-                  <h2 className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-3">📊 Métricas de Tráfego</h2>
+                  <h2 className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-3">
+                    📊 Métricas de Tráfego
+                  </h2>
                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                     <div className="admin-card p-5 stat-glow">
                       <div className="flex items-center gap-2 mb-2">
                         <Users className="w-4 h-4 text-violet-400" />
-                        <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Visitantes Únicos</span>
+                        <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">
+                          Visitantes Únicos
+                        </span>
                       </div>
-                      <div className="text-3xl font-black text-white">{statsData?.totalUniqueUsers ?? 0}</div>
+                      <div className="text-3xl font-black text-white">
+                        {statsData?.totalUniqueUsers ?? 0}
+                      </div>
                       <div className="text-[10px] text-zinc-600 mt-1">IPs distintos</div>
                     </div>
                     <div className="admin-card p-5 stat-glow">
                       <div className="flex items-center gap-2 mb-2">
                         <Camera className="w-4 h-4 text-emerald-400" />
-                        <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Geraram Fotos</span>
+                        <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">
+                          Geraram Fotos
+                        </span>
                       </div>
-                      <div className="text-3xl font-black text-emerald-400">{statsData?.totalGeneratingUsers ?? 0}</div>
+                      <div className="text-3xl font-black text-emerald-400">
+                        {statsData?.totalGeneratingUsers ?? 0}
+                      </div>
                       <div className="text-[10px] text-zinc-600 mt-1">
-                        {statsData?.totalUniqueUsers ? `${((statsData.totalGeneratingUsers / statsData.totalUniqueUsers) * 100).toFixed(1)}% dos visitantes` : '—'}
+                        {statsData?.totalUniqueUsers
+                          ? `${((statsData.totalGeneratingUsers / statsData.totalUniqueUsers) * 100).toFixed(1)}% dos visitantes`
+                          : "—"}
                       </div>
                     </div>
                     <div className="admin-card p-5 stat-glow">
                       <div className="flex items-center gap-2 mb-2">
                         <CreditCard className="w-4 h-4 text-amber-400" />
-                        <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Clientes Pagos</span>
+                        <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">
+                          Clientes Pagos
+                        </span>
                       </div>
-                      <div className="text-3xl font-black text-amber-400">{statsData?.totalPaidUsers ?? 0}</div>
+                      <div className="text-3xl font-black text-amber-400">
+                        {statsData?.totalPaidUsers ?? 0}
+                      </div>
                       <div className="text-[10px] text-zinc-600 mt-1">via Pix</div>
                     </div>
                     <div className="admin-card p-5 stat-glow">
                       <div className="flex items-center gap-2 mb-2">
                         <TrendingUp className="w-4 h-4 text-sky-400" />
-                        <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Conversão</span>
+                        <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">
+                          Conversão
+                        </span>
                       </div>
-                      <div className="text-3xl font-black text-sky-400">{statsData?.conversionRate ?? 0}%</div>
+                      <div className="text-3xl font-black text-sky-400">
+                        {statsData?.conversionRate ?? 0}%
+                      </div>
                       <div className="text-[10px] text-zinc-600 mt-1">foto → pagamento</div>
                     </div>
                   </div>
@@ -384,15 +474,22 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
 
                 {/* Character Breakdown */}
                 <div>
-                  <h2 className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-3">🇧🇷 Fotos por Político ({charStats.total} total)</h2>
+                  <h2 className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-3">
+                    🇧🇷 Fotos por Político ({charStats.total} total)
+                  </h2>
                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                     {(Object.keys(CHARACTERS) as CharKey[]).map((key) => {
                       const ch = CHARACTERS[key];
                       const count = charStats.chars[key] || 0;
-                      const pct = charStats.total > 0 ? ((count / charStats.total) * 100).toFixed(0) : "0";
+                      const pct =
+                        charStats.total > 0 ? ((count / charStats.total) * 100).toFixed(0) : "0";
                       return (
                         <div key={key} className="admin-card p-4 flex items-center gap-3">
-                          <img src={ch.example} alt="" className="w-10 h-10 rounded-full object-cover border-2 border-zinc-700" />
+                          <img
+                            src={ch.example}
+                            alt=""
+                            className="w-10 h-10 rounded-full object-cover border-2 border-zinc-700"
+                          />
                           <div className="flex-1 min-w-0">
                             <div className={`text-xs font-bold ${ch.color}`}>{ch.short}</div>
                             <div className="text-lg font-black text-white">{count}</div>
@@ -406,35 +503,58 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
 
                 {/* Recent Activity */}
                 <div>
-                  <h2 className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-3">🕐 Atividade Recente</h2>
+                  <h2 className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-3">
+                    🕐 Atividade Recente
+                  </h2>
                   <div className="admin-card overflow-hidden">
                     {logs.slice(0, 8).map((l, i) => {
                       const ch = CHARACTERS[l.character as CharKey];
                       return (
-                        <div key={i} className={`flex items-center gap-3 px-4 py-3 ${i > 0 ? 'border-t border-zinc-800/30' : ''}`}>
+                        <div
+                          key={i}
+                          className={`flex items-center gap-3 px-4 py-3 ${i > 0 ? "border-t border-zinc-800/30" : ""}`}
+                        >
                           {l.url ? (
-                            <img src={l.url} alt="" className="w-8 h-8 rounded-lg object-cover border border-zinc-700 flex-shrink-0" />
+                            <img
+                              src={l.url}
+                              alt=""
+                              className="w-8 h-8 rounded-lg object-cover border border-zinc-700 flex-shrink-0"
+                            />
                           ) : (
                             <div className="w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center flex-shrink-0">
                               <Camera className="w-3.5 h-3.5 text-zinc-600" />
                             </div>
                           )}
                           <div className="flex-1 min-w-0">
-                            <div className="text-xs font-semibold text-zinc-200 truncate">{ch?.name || l.character}</div>
-                            <div className="text-[10px] text-zinc-500 font-mono">{l.ip} · {formatDate(l.timestamp)}</div>
+                            <div className="text-xs font-semibold text-zinc-200 truncate">
+                              {ch?.name || l.character}
+                            </div>
+                            <div className="text-[10px] text-zinc-500 font-mono">
+                              {l.ip} · {formatDate(l.timestamp)}
+                            </div>
                           </div>
                           {l.status && (
-                            <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase ${
-                              l.status === "paid" ? "bg-emerald-500/10 text-emerald-400" : "bg-zinc-800 text-zinc-400"
-                            }`}>
-                              {l.status === "paid" ? "Pago" : l.status === "generated_preview" ? "Preview" : l.status}
+                            <span
+                              className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase ${
+                                l.status === "paid"
+                                  ? "bg-emerald-500/10 text-emerald-400"
+                                  : "bg-zinc-800 text-zinc-400"
+                              }`}
+                            >
+                              {l.status === "paid"
+                                ? "Pago"
+                                : l.status === "generated_preview"
+                                  ? "Preview"
+                                  : l.status}
                             </span>
                           )}
                         </div>
                       );
                     })}
                     {logs.length === 0 && (
-                      <div className="py-8 text-center text-zinc-600 text-sm">Nenhum registro encontrado.</div>
+                      <div className="py-8 text-center text-zinc-600 text-sm">
+                        Nenhum registro encontrado.
+                      </div>
                     )}
                   </div>
                 </div>
@@ -469,9 +589,17 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                 ) : (
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
                     {filteredLogs.map((l, index) => {
-                      const ch = CHARACTERS[l.character as CharKey] || { name: l.character, short: l.character, example: "", color: "text-zinc-400" };
+                      const ch = CHARACTERS[l.character as CharKey] || {
+                        name: l.character,
+                        short: l.character,
+                        example: "",
+                        color: "text-zinc-400",
+                      };
                       return (
-                        <div key={index} className="admin-card overflow-hidden flex flex-col group transition duration-300">
+                        <div
+                          key={index}
+                          className="admin-card overflow-hidden flex flex-col group transition duration-300"
+                        >
                           <div className="aspect-square bg-zinc-900 relative overflow-hidden flex-shrink-0">
                             {l.url ? (
                               <img
@@ -486,23 +614,41 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                               </div>
                             )}
                             {l.status && (
-                              <span className={`absolute top-2 right-2 px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wider ${
-                                l.status === "paid"
-                                  ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
-                                  : "bg-zinc-800/80 text-zinc-400 border border-zinc-700/50"
-                              }`}>
-                                {l.status === "paid" ? "Pago" : l.status === "generated_preview" ? "Preview" : l.status}
+                              <span
+                                className={`absolute top-2 right-2 px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wider ${
+                                  l.status === "paid"
+                                    ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                                    : "bg-zinc-800/80 text-zinc-400 border border-zinc-700/50"
+                                }`}
+                              >
+                                {l.status === "paid"
+                                  ? "Pago"
+                                  : l.status === "generated_preview"
+                                    ? "Preview"
+                                    : l.status}
                               </span>
                             )}
                           </div>
                           <div className="p-3 flex-1 flex flex-col justify-between">
                             <div className="space-y-0.5">
                               <div className="flex items-center gap-1.5">
-                                {ch.example && <img src={ch.example} alt="" className="w-3.5 h-3.5 rounded-full object-cover border border-zinc-700" />}
-                                <span className="font-bold text-[10px] text-zinc-300 truncate">{ch.name}</span>
+                                {ch.example && (
+                                  <img
+                                    src={ch.example}
+                                    alt=""
+                                    className="w-3.5 h-3.5 rounded-full object-cover border border-zinc-700"
+                                  />
+                                )}
+                                <span className="font-bold text-[10px] text-zinc-300 truncate">
+                                  {ch.name}
+                                </span>
                               </div>
-                              <div className="text-[9px] text-zinc-600 font-mono truncate">{l.ip}</div>
-                              <div className="text-[9px] text-zinc-600">{formatDate(l.timestamp)}</div>
+                              <div className="text-[9px] text-zinc-600 font-mono truncate">
+                                {l.ip}
+                              </div>
+                              <div className="text-[9px] text-zinc-600">
+                                {formatDate(l.timestamp)}
+                              </div>
                             </div>
                             <div className="grid grid-cols-2 gap-1.5 mt-2 pt-2 border-t border-zinc-800/40">
                               {l.url && (
@@ -537,8 +683,12 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
             {activeTab === "test" && (
               <div className="space-y-6 fade-up">
                 <div>
-                  <h2 className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-3">⚡ Área de Testes</h2>
-                  <p className="text-xs text-zinc-600 mb-4">Teste toda a pipeline de geração e checkout sem afetar clientes reais.</p>
+                  <h2 className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-3">
+                    ⚡ Área de Testes
+                  </h2>
+                  <p className="text-xs text-zinc-600 mb-4">
+                    Teste toda a pipeline de geração e checkout sem afetar clientes reais.
+                  </p>
                 </div>
 
                 <div className="grid lg:grid-cols-2 gap-6">
@@ -556,14 +706,21 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                         return (
                           <button
                             key={key}
-                            onClick={() => { setTestCharacter(key); resetTest(); }}
+                            onClick={() => {
+                              setTestCharacter(key);
+                              resetTest();
+                            }}
                             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold transition cursor-pointer ${
                               testCharacter === key
-                                ? 'bg-violet-600 text-white'
-                                : 'bg-zinc-800/50 text-zinc-400 hover:text-white'
+                                ? "bg-violet-600 text-white"
+                                : "bg-zinc-800/50 text-zinc-400 hover:text-white"
                             }`}
                           >
-                            <img src={ch.example} alt="" className="w-4 h-4 rounded-full object-cover" />
+                            <img
+                              src={ch.example}
+                              alt=""
+                              className="w-4 h-4 rounded-full object-cover"
+                            />
                             {ch.short}
                           </button>
                         );
@@ -574,7 +731,11 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                     <div className="aspect-square rounded-xl overflow-hidden border border-zinc-800 bg-zinc-900 relative">
                       {testStep === "idle" && (
                         <div className="w-full h-full flex flex-col items-center justify-center gap-3">
-                          <img src={CHARACTERS[testCharacter].example} alt="" className="w-full h-full object-cover opacity-30" />
+                          <img
+                            src={CHARACTERS[testCharacter].example}
+                            alt=""
+                            className="w-full h-full object-cover opacity-30"
+                          />
                           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
                             <Upload className="w-8 h-8 text-zinc-600" />
                             <p className="text-xs text-zinc-500">Envie uma foto ou use simulação</p>
@@ -589,7 +750,11 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                       )}
                       {(testStep === "preview" || testStep === "paid") && testGeneratedUrl && (
                         <>
-                          <img src={testGeneratedUrl} alt="" className="w-full h-full object-cover" />
+                          <img
+                            src={testGeneratedUrl}
+                            alt=""
+                            className="w-full h-full object-cover"
+                          />
                           {testStep === "paid" && (
                             <div className="absolute top-3 right-3 bg-emerald-500 text-white px-3 py-1 rounded-full text-[10px] font-bold flex items-center gap-1">
                               <Check className="w-3 h-3" /> LIBERADA
@@ -638,7 +803,10 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                       {testStep === "preview" && (
                         <div className="grid grid-cols-2 gap-2">
                           <button
-                            onClick={() => { setTestStep("paid"); toast.success("Foto liberada via teste! ✅"); }}
+                            onClick={() => {
+                              setTestStep("paid");
+                              toast.success("Foto liberada via teste! ✅");
+                            }}
                             className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition cursor-pointer text-xs"
                           >
                             <Lock className="w-4 h-4" /> Liberar Foto
@@ -655,7 +823,9 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                         <div className="space-y-2">
                           <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-xl p-3 text-center">
                             <CheckCircle2 className="w-5 h-5 text-emerald-400 mx-auto mb-1" />
-                            <p className="text-xs text-emerald-400 font-bold">Foto liberada com sucesso!</p>
+                            <p className="text-xs text-emerald-400 font-bold">
+                              Foto liberada com sucesso!
+                            </p>
                           </div>
                           <button
                             onClick={resetTest}
@@ -666,7 +836,9 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                         </div>
                       )}
                       {testStep === "generating" && (
-                        <p className="text-center text-xs text-zinc-500">Aguardando resposta da IA...</p>
+                        <p className="text-center text-xs text-zinc-500">
+                          Aguardando resposta da IA...
+                        </p>
                       )}
                     </div>
                   </div>
@@ -694,7 +866,10 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                           👁️ Abrir Site (Visão do Cliente)
                         </a>
                         <button
-                          onClick={() => { fetchData(); toast.success("Dados atualizados! 🔄"); }}
+                          onClick={() => {
+                            fetchData();
+                            toast.success("Dados atualizados! 🔄");
+                          }}
                           className="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition text-xs cursor-pointer"
                         >
                           <RefreshCw className="w-3.5 h-3.5" /> Recarregar Dados
@@ -718,15 +893,21 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                         </div>
                         <div className="flex justify-between py-1.5 border-b border-zinc-800/40">
                           <span className="text-zinc-500">Visitantes únicos</span>
-                          <span className="text-white font-bold">{statsData?.totalUniqueUsers ?? 0}</span>
+                          <span className="text-white font-bold">
+                            {statsData?.totalUniqueUsers ?? 0}
+                          </span>
                         </div>
                         <div className="flex justify-between py-1.5 border-b border-zinc-800/40">
                           <span className="text-zinc-500">Plataforma</span>
-                          <span className="text-zinc-300 font-mono text-[10px]">Cloudflare Workers</span>
+                          <span className="text-zinc-300 font-mono text-[10px]">
+                            Cloudflare Workers
+                          </span>
                         </div>
                         <div className="flex justify-between py-1.5">
                           <span className="text-zinc-500">Banco</span>
-                          <span className="text-zinc-300 font-mono text-[10px]">Supabase PostgreSQL</span>
+                          <span className="text-zinc-300 font-mono text-[10px]">
+                            Supabase PostgreSQL
+                          </span>
                         </div>
                       </div>
                     </div>
