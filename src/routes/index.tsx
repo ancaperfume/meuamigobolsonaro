@@ -1449,20 +1449,6 @@ function UpsellModal({
     }
   };
 
-  const simulateSuccess = () => {
-    toast.success(`${content.toastSuccess} (Simulado)`);
-    if (type === "darkhorse") {
-      const link = document.createElement("a");
-      link.href = content.downloadFile;
-      link.download = content.downloadName;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } else {
-      window.open(content.downloadFile, "_blank");
-    }
-    onClose(true);
-  };
 
   return (
     <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
@@ -1614,17 +1600,6 @@ function UpsellModal({
                 <Loader2 className="w-4.5 h-4.5 animate-spin text-[oklch(0.52_0.16_145)]" />
                 <span className="font-semibold animate-pulse">Aguardando confirmação do pagamento…</span>
               </div>
-
-              {/* SIMULAÇÃO DE PAGAMENTO DO UPSELL */}
-              {isDevMode && (
-                <button
-                  type="button"
-                  onClick={simulateSuccess}
-                  className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 text-xs shadow-md shadow-amber-500/20 cursor-pointer animate-pulse transition active:scale-98"
-                >
-                  {content.simulatedLabel}
-                </button>
-              )}
 
               <div className="text-[10px] text-center text-muted-foreground font-medium">
                 🔒 Liberação e download automático imediato. Não feche essa tela.
