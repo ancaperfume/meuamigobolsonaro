@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { generatePhoto } from "@/lib/photo.functions";
+import { generatePhoto, getGenerationsLog } from "@/lib/photo.functions";
 import { createPixCharge, getOrderStatus } from "@/lib/payment.functions";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
@@ -116,6 +116,12 @@ function Index() {
   const [progress, setProgress] = useState(0);
   const [logIndex, setLogIndex] = useState(0);
   const [tipIndex, setTipIndex] = useState(0);
+  const [hasDownloaded, setHasDownloaded] = useState(false);
+  const [showCrossSellModal, setShowCrossSellModal] = useState(false);
+  const [showAdminLogin, setShowAdminLogin] = useState(false);
+  const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
+  const [showAdminPanel, setShowAdminPanel] = useState(false);
+  const [promoPrice, setPromoPrice] = useState(6.22);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -201,11 +207,11 @@ function Index() {
   const c = CHARACTERS[character];
 
   const total = useMemo(() => {
-    let t = 6.22;
+    let t = promoPrice;
     if (bumps.oracoes) t += 3.99;
     if (bumps.guia) t += 14.9;
     return t;
-  }, [bumps]);
+  }, [bumps, promoPrice]);
 
   const handleFile = useCallback(async (file: File) => {
     if (!file.type.startsWith("image/")) {
@@ -257,6 +263,8 @@ function Index() {
     setProgress(0);
     setLogIndex(0);
     setTipIndex(0);
+    setHasDownloaded(false);
+    setPromoPrice(6.22);
   };
 
   const handlePaid = useCallback(() => {
@@ -502,142 +510,156 @@ function Index() {
                   <a
                     href={generatedUrl!}
                     download={`bolsonaro-meu-amigo-${character}.png`}
-                    className="w-full bg-[oklch(0.52_0.16_145)] hover:bg-[oklch(0.45_0.16_145)] text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition"
+                    onClick={() => {
+                      setHasDownloaded(true);
+                      toast.success("Download iniciado! 🇧🇷");
+                    }}
+                    className="w-full bg-[oklch(0.52_0.16_145)] hover:bg-[oklch(0.45_0.16_145)] text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition shadow-lg animate-pulse"
                   >
                     <Check className="w-5 h-5" /> Baixar foto em alta resolução
                   </a>
-                  
-                  {/* COMPARTILHAMENTO NAS REDES SOCIAIS */}
-                  <div className="bg-card border-2 border-dashed border-[oklch(0.52_0.16_145)]/40 rounded-2xl p-4.5 space-y-3">
-                    <div className="text-sm font-bold text-center text-foreground flex items-center justify-center gap-1.5">
-                      <Sparkles className="w-4 h-4 text-[oklch(0.52_0.16_145)]" />
-                      <span>🇧🇷 COMPARTILHE COM SEUS AMIGOS!</span>
-                    </div>
-                    
-                    <p className="text-xs text-muted-foreground text-center leading-relaxed">
-                      Mostre para toda a sua família e amigos a sua foto oficial com {c.short}!
-                    </p>
 
-                    <div className="grid grid-cols-3 gap-2">
-                      {/* WHATSAPP */}
-                      <a
-                        href={`https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="bg-[#25D366] hover:bg-[#20ba59] text-white font-bold py-2.5 px-2 rounded-xl flex flex-col items-center justify-center gap-1 text-[10px] shadow-md shadow-[#25D366]/20 transition"
-                      >
-                        <svg className="w-4.5 h-4.5 fill-current" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.513 2.262 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.455L0 24zm6.59-4.846c1.66.986 3.288 1.489 4.954 1.49 5.375 0 9.75-4.332 9.753-9.674.002-2.587-1.002-5.02-2.828-6.848S14.286 1.252 11.7 1.25c-5.38 0-9.757 4.335-9.76 9.676-.001 1.77.478 3.498 1.388 5.067L2.247 21.8l5.8-.954zM16.9 14.94c-.266-.134-1.58-.78-1.828-.87-.247-.09-.427-.134-.607.134-.18.267-.697.87-.852 1.048-.157.177-.313.2-.58.066-.268-.133-1.13-.417-2.153-1.332-.796-.71-1.333-1.59-1.49-1.857-.156-.266-.017-.41.118-.544.12-.12.268-.313.402-.47.135-.156.18-.266.27-.445.09-.177.046-.332-.023-.466-.068-.134-.607-1.464-.83-2.005-.22-.527-.436-.456-.6-.464-.15-.008-.324-.01-.497-.01-.174 0-.457.065-.697.325-.24.26-.917.896-.917 2.186 0 1.29.938 2.533 1.07 2.71.13.178 1.843 2.813 4.464 3.94.623.268 1.11.428 1.49.548.627.2 1.2.172 1.65.105.5-.075 1.58-.646 1.802-1.27.22-.625.22-1.16.155-1.27-.066-.11-.247-.176-.513-.31z"/></svg>
-                        <span>WhatsApp</span>
-                      </a>
-
-                      {/* FACEBOOK */}
-                      <a
-                        href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(typeof window !== 'undefined' ? window.location.origin : 'https://meuamigobolsonaro.com.br')}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="bg-[#1877F2] hover:bg-[#156bec] text-white font-bold py-2.5 px-2 rounded-xl flex flex-col items-center justify-center gap-1 text-[10px] shadow-md shadow-[#1877F2]/20 transition"
-                      >
-                        <svg className="w-4.5 h-4.5 fill-current" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-                        <span>Facebook</span>
-                      </a>
-
-                      {/* INSTAGRAM */}
-                      <button
-                        onClick={async () => {
-                          try {
-                            await navigator.clipboard.writeText(shareText);
-                            toast.success("Legenda copiada com sucesso!");
-                          } catch (e) {
-                            // ignore
-                          }
-                          window.open("https://www.instagram.com", "_blank");
-                        }}
-                        className="bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] hover:brightness-110 text-white font-bold py-2.5 px-2 rounded-xl flex flex-col items-center justify-center gap-1 text-[10px] shadow-md shadow-[#ee2a7b]/20 transition cursor-pointer"
-                      >
-                        <svg className="w-4.5 h-4.5 fill-current" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.051C.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
-                        <span>Instagram</span>
-                      </button>
-                    </div>
-
-                    <button
-                      onClick={handleShareNative}
-                      className="w-full py-2.5 bg-muted hover:bg-muted/80 text-foreground font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 border border-border transition cursor-pointer"
-                    >
-                      <span>🔗 Copiar Link & Legenda</span>
-                    </button>
-                  </div>
-
-                  {(paidBumps.oracoes || paidBumps.guia) && (
-                    <div className="rounded-xl border border-border bg-card p-4 space-y-2">
-                      <div className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
-                        Seus bônus liberados
-                      </div>
-                      {paidBumps.oracoes && (
-                        <a
-                          href="/downloads/250-oracoes-secretas.pdf"
-                          download
-                          className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-muted hover:bg-[oklch(0.88_0.19_95)]/40 transition text-sm font-medium"
-                        >
-                          <span>📖 250+ Orações Secretas (PDF)</span>
-                          <span className="text-[oklch(0.52_0.16_145)]">Baixar</span>
-                        </a>
-                      )}
-                      {paidBumps.guia && (
-                        <a
-                          href="/downloads/guia-filho-de-direita.pdf"
-                          download
-                          className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-muted hover:bg-[oklch(0.88_0.19_95)]/40 transition text-sm font-medium"
-                        >
-                          <span>🛡️ Guia Filho de Direita (PDF)</span>
-                          <span className="text-[oklch(0.52_0.16_145)]">Baixar</span>
-                        </a>
-                      )}
+                  {!hasDownloaded && (
+                    <div className="bg-amber-500/10 border-2 border-dashed border-amber-500/25 text-amber-800 dark:text-amber-300 rounded-xl p-4 text-center text-xs font-semibold leading-relaxed">
+                      📥 Clique no botão verde acima para baixar e salvar sua foto HD no celular. Após salvar, você poderá compartilhar com sua família e resgatar seus presentes!
                     </div>
                   )}
 
-                  {/* PÓS-COMPRA: OUTROS MEMBROS CROSS-SELL */}
-                  <div className="bg-muted/65 border border-border rounded-2xl p-5 space-y-4 text-center">
-                    <div className="text-[10px] uppercase tracking-widest text-[oklch(0.52_0.16_145)] font-extrabold">
-                      🎉 Oferta de Cliente Especial!
-                    </div>
-                    <h3 className="font-display text-base font-bold text-foreground leading-tight">
-                      Gostou? Complete seu álbum com outros ídolos!
-                    </h3>
-                    <p className="text-[11px] text-muted-foreground leading-relaxed">
-                      Você já tem sua foto com {c.short}. Tire uma foto com os outros membros por um preço super especial!
-                    </p>
+                  {hasDownloaded && (
+                    <div className="space-y-5 animate-in fade-in duration-500">
+                      {/* COMPARTILHAMENTO NAS REDES SOCIAIS */}
+                      <div className="bg-card border-2 border-dashed border-[oklch(0.52_0.16_145)]/40 rounded-2xl p-4.5 space-y-3">
+                        <div className="text-sm font-bold text-center text-foreground flex items-center justify-center gap-1.5">
+                          <Sparkles className="w-4 h-4 text-[oklch(0.52_0.16_145)]" />
+                          <span>🇧🇷 COMPARTILHE COM SEUS AMIGOS!</span>
+                        </div>
+                        
+                        <p className="text-xs text-muted-foreground text-center leading-relaxed">
+                          Mostre para toda a sua família e amigos a sua foto oficial com {c.short}!
+                        </p>
 
-                    <div className="grid grid-cols-2 gap-2 pt-1.5">
-                      {Object.keys(CHARACTERS).map((key) => {
-                        const charKey = key as CharKey;
-                        if (charKey === character) return null;
-                        const ch = CHARACTERS[charKey];
-                        return (
-                          <button
-                            key={charKey}
-                            onClick={() => {
-                              setCharacter(charKey);
-                              reset();
-                              toast.success(`Personagem alterado para ${ch.short}! Envie sua selfie para começar!`);
-                            }}
-                            className="bg-card hover:bg-[oklch(0.88_0.19_95)]/20 border border-border hover:border-[oklch(0.52_0.16_145)]/40 rounded-xl p-3 text-center transition flex flex-col items-center gap-1.5 group cursor-pointer"
+                        <div className="grid grid-cols-3 gap-2">
+                          {/* WHATSAPP */}
+                          <a
+                            href={`https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="bg-[#25D366] hover:bg-[#20ba59] text-white font-bold py-2.5 px-2 rounded-xl flex flex-col items-center justify-center gap-1 text-[10px] shadow-md shadow-[#25D366]/20 transition"
                           >
-                            <img
-                              src={ch.example}
-                              alt={ch.name}
-                              className="w-10 h-10 rounded-full object-cover border border-border group-hover:border-[oklch(0.52_0.16_145)]/50 transition"
-                            />
-                            <div className="text-[11px] font-bold text-foreground leading-tight">
-                              Foto com {ch.short}
-                            </div>
-                            <span className="text-[9px] text-[oklch(0.52_0.16_145)] font-bold">
-                              Criar Foto →
-                            </span>
+                            <svg className="w-4.5 h-4.5 fill-current" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.513 2.262 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.455L0 24zm6.59-4.846c1.66.986 3.288 1.489 4.954 1.49 5.375 0 9.75-4.332 9.753-9.674.002-2.587-1.002-5.02-2.828-6.848S14.286 1.252 11.7 1.25c-5.38 0-9.757 4.335-9.76 9.676-.001 1.77.478 3.498 1.388 5.067L2.247 21.8l5.8-.954zM16.9 14.94c-.266-.134-1.58-.78-1.828-.87-.247-.09-.427-.134-.607.134-.18.267-.697.87-.852 1.048-.157.177-.313.2-.58.066-.268-.133-1.13-.417-2.153-1.332-.796-.71-1.333-1.59-1.49-1.857-.156-.266-.017-.41.118-.544.12-.12.268-.313.402-.47.135-.156.18-.266.27-.445.09-.177.046-.332-.023-.466-.068-.134-.607-1.464-.83-2.005-.22-.527-.436-.456-.6-.464-.15-.008-.324-.01-.497-.01-.174 0-.457.065-.697.325-.24.26-.917.896-.917 2.186 0 1.29.938 2.533 1.07 2.71.13.178 1.843 2.813 4.464 3.94.623.268 1.11.428 1.49.548.627.2 1.2.172 1.65.105.5-.075 1.58-.646 1.802-1.27.22-.625.22-1.16.155-1.27-.066-.11-.247-.176-.513-.31z"/></svg>
+                            <span>WhatsApp</span>
+                          </a>
+
+                          {/* FACEBOOK */}
+                          <a
+                            href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(typeof window !== 'undefined' ? window.location.origin : 'https://meuamigobolsonaro.com.br')}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="bg-[#1877F2] hover:bg-[#156bec] text-white font-bold py-2.5 px-2 rounded-xl flex flex-col items-center justify-center gap-1 text-[10px] shadow-md shadow-[#1877F2]/20 transition"
+                          >
+                            <svg className="w-4.5 h-4.5 fill-current" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                            <span>Facebook</span>
+                          </a>
+
+                          {/* INSTAGRAM */}
+                          <button
+                            onClick={async () => {
+                              try {
+                                await navigator.clipboard.writeText(shareText);
+                                toast.success("Legenda copiada com sucesso!");
+                              } catch (e) {
+                                // ignore
+                              }
+                              window.open("https://www.instagram.com", "_blank");
+                            }}
+                            className="bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] hover:brightness-110 text-white font-bold py-2.5 px-2 rounded-xl flex flex-col items-center justify-center gap-1 text-[10px] shadow-md shadow-[#ee2a7b]/20 transition cursor-pointer"
+                          >
+                            <svg className="w-4.5 h-4.5 fill-current" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.051C.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+                            <span>Instagram</span>
                           </button>
-                        );
-                      })}
+                        </div>
+
+                        <button
+                          onClick={handleShareNative}
+                          className="w-full py-2.5 bg-muted hover:bg-muted/80 text-foreground font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 border border-border transition cursor-pointer"
+                        >
+                          <span>🔗 Copiar Link & Legenda</span>
+                        </button>
+                      </div>
+
+                      {(paidBumps.oracoes || paidBumps.guia) && (
+                        <div className="rounded-xl border border-border bg-card p-4 space-y-2">
+                          <div className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
+                            Seus bônus liberados
+                          </div>
+                          {paidBumps.oracoes && (
+                            <a
+                              href="/downloads/250-oracoes-secretas.pdf"
+                              download
+                              className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-muted hover:bg-[oklch(0.88_0.19_95)]/40 transition text-sm font-medium"
+                            >
+                              <span>📖 250+ Orações Secretas (PDF)</span>
+                              <span className="text-[oklch(0.52_0.16_145)]">Baixar</span>
+                            </a>
+                          )}
+                          {paidBumps.guia && (
+                            <a
+                              href="/downloads/guia-filho-de-direita.pdf"
+                              download
+                              className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-muted hover:bg-[oklch(0.88_0.19_95)]/40 transition text-sm font-medium"
+                            >
+                              <span>🛡️ Guia Filho de Direita (PDF)</span>
+                              <span className="text-[oklch(0.52_0.16_145)]">Baixar</span>
+                            </a>
+                          )}
+                        </div>
+                      )}
+
+                      {/* PÓS-COMPRA: OUTROS MEMBROS CROSS-SELL */}
+                      <div className="bg-muted/65 border border-border rounded-2xl p-5 space-y-4 text-center">
+                        <div className="text-[10px] uppercase tracking-widest text-[oklch(0.52_0.16_145)] font-extrabold">
+                          🎉 Oferta de Cliente Especial!
+                        </div>
+                        <h3 className="font-display text-base font-bold text-foreground leading-tight">
+                          Gostou? Complete seu álbum com outros ídolos!
+                        </h3>
+                        <p className="text-[11px] text-muted-foreground leading-relaxed">
+                          Você já tem sua foto com {c.short}. Tire uma foto com os outros membros por um preço super especial!
+                        </p>
+
+                        <div className="grid grid-cols-2 gap-2 pt-1.5">
+                          {Object.keys(CHARACTERS).map((key) => {
+                            const charKey = key as CharKey;
+                            if (charKey === character) return null;
+                            const ch = CHARACTERS[charKey];
+                            return (
+                              <button
+                                key={charKey}
+                                onClick={() => {
+                                  setCharacter(charKey);
+                                  reset();
+                                  toast.success(`Personagem alterado para ${ch.short}! Envie sua selfie para começar!`);
+                                }}
+                                className="bg-card hover:bg-[oklch(0.88_0.19_95)]/20 border border-border hover:border-[oklch(0.52_0.16_145)]/40 rounded-xl p-3 text-center transition flex flex-col items-center gap-1.5 group cursor-pointer"
+                              >
+                                <img
+                                  src={ch.example}
+                                  alt={ch.name}
+                                  className="w-10 h-10 rounded-full object-cover border border-border group-hover:border-[oklch(0.52_0.16_145)]/50 transition"
+                                />
+                                <div className="text-[11px] font-bold text-foreground leading-tight">
+                                  Foto com {ch.short}
+                                </div>
+                                <span className="text-[9px] text-[oklch(0.52_0.16_145)] font-bold">
+                                  Criar Foto →
+                                </span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   <button onClick={reset} className="w-full text-sm text-muted-foreground hover:text-foreground py-2 cursor-pointer">
                     Fazer outra foto
@@ -680,6 +702,13 @@ function Index() {
           <div className="flex items-center justify-center gap-2 mb-2">
             <Heart className="w-3 h-3 text-[oklch(0.52_0.16_145)]" />
             Feito por brasileiros, para brasileiros.
+            <button 
+              type="button"
+              onClick={() => setShowAdminLogin(true)}
+              className="text-[9px] opacity-20 hover:opacity-100 transition font-mono ml-2 underline cursor-pointer"
+            >
+              [Admin Login]
+            </button>
           </div>
           <div>Site não oficial, sem vínculo com nenhuma pessoa pública. Imagens geradas por IA com fins de entretenimento.</div>
         </footer>
@@ -732,6 +761,10 @@ function Index() {
               <a
                 href={generatedUrl!}
                 download={`bolsonaro-meu-amigo-${character}.png`}
+                onClick={() => {
+                  setHasDownloaded(true);
+                  toast.success("Download iniciado! 🇧🇷");
+                }}
                 className="flex-1 bg-[oklch(0.52_0.16_145)] hover:bg-[oklch(0.45_0.16_145)] text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition text-center"
               >
                 <Check className="w-5 h-5" /> Baixar foto
@@ -757,6 +790,7 @@ function Index() {
           onClose={() => setShowPayment(false)}
           onPaid={handlePaid}
           isDevMode={isDevMode}
+          generatedUrl={generatedUrl}
         />
       )}
       {activeUpsell === "darkhorse" && (
@@ -772,7 +806,78 @@ function Index() {
           type="grupo"
           characterKey={character} 
           isDevMode={isDevMode} 
-          onClose={() => setActiveUpsell(null)} 
+          onClose={() => {
+            setActiveUpsell(null);
+            setShowCrossSellModal(true);
+          }} 
+        />
+      )}
+      {isDevMode && (step === "preview" || step === "paid") && (
+        <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 mt-4 space-y-2 text-xs">
+          <div className="font-bold text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
+            <span>🛠️ PAINEL DO DESENVOLVEDOR</span>
+          </div>
+          <div className="flex gap-2 flex-wrap">
+            {step === "preview" && (
+              <button
+                onClick={() => {
+                  setStep("paid");
+                  toast.success("Foto liberada via Painel Dev! 🎉");
+                }}
+                className="bg-amber-500 hover:bg-amber-600 text-white font-bold px-3 py-1.5 rounded-lg transition"
+              >
+                🔓 Liberar Foto Grátis
+              </button>
+            )}
+            <button
+              onClick={() => {
+                if (generatedUrl) {
+                  navigator.clipboard.writeText(generatedUrl);
+                  toast.success("URL copiada!");
+                }
+              }}
+              className="bg-muted hover:bg-muted/80 text-foreground font-semibold px-3 py-1.5 rounded-lg transition border border-border"
+            >
+              📋 Copiar URL
+            </button>
+            <button
+              onClick={() => setShowAdminLogin(true)}
+              className="bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold px-3 py-1.5 rounded-lg transition border border-slate-700"
+            >
+              ⚙️ Dashboard Admin (Logs)
+            </button>
+          </div>
+          {generatedUrl && (
+            <div className="text-[10px] text-muted-foreground break-all select-all font-mono">
+              <strong>URL:</strong> {generatedUrl}
+            </div>
+          )}
+        </div>
+      )}
+      {showCrossSellModal && (
+        <CrossSellModal
+          onClose={() => setShowCrossSellModal(false)}
+          onSelectCharacter={(charKey) => {
+            setCharacter(charKey);
+            reset();
+            setPromoPrice(4.99);
+            toast.success(`Personagem alterado para ${CHARACTERS[charKey].short}! Desconto de Pós-Venda Ativo: R$ 4,99! 🇧🇷`);
+          }}
+        />
+      )}
+      {showAdminLogin && (
+        <AdminLoginModal
+          onClose={() => setShowAdminLogin(false)}
+          onSuccess={() => {
+            setShowAdminLogin(false);
+            setIsAdminLoggedIn(true);
+            setShowAdminPanel(true);
+          }}
+        />
+      )}
+      {showAdminPanel && isAdminLoggedIn && (
+        <DevDashboardModal
+          onClose={() => setShowAdminPanel(false)}
         />
       )}
     </div>
@@ -960,7 +1065,9 @@ function PaymentModal({
                 </div>
                 <div className="font-semibold text-right">
                   <span className="text-xs text-muted-foreground line-through mr-2">R$ 19,90</span>
-                  <span className="text-[oklch(0.52_0.16_145)]">R$ 6,22</span>
+                  <span className="text-[oklch(0.52_0.16_145)]">
+                    R$ {(total - (bumps.oracoes ? 3.99 : 0) - (bumps.guia ? 14.9 : 0)).toFixed(2).replace(".", ",")}
+                  </span>
                 </div>
               </div>
 
@@ -1581,6 +1688,379 @@ function UpsellModal({
               </div>
             </div>
           )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CrossSellModal({
+  onClose,
+  onSelectCharacter,
+}: {
+  onClose: () => void;
+  onSelectCharacter: (charKey: CharKey) => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+      <div className="bg-background rounded-3xl max-w-lg w-full my-8 shadow-[0_20px_50px_rgba(4,106,56,0.3)] border-2 border-emerald-500/50 overflow-hidden flex flex-col max-h-[90vh] animate-in scale-in duration-300">
+        <div className="bg-gradient-to-br from-emerald-700 via-emerald-600 to-green-700 text-white px-6 py-8 text-center relative flex-shrink-0">
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 opacity-70 hover:opacity-100 cursor-pointer p-1.5 rounded-full hover:bg-white/10 transition"
+          >
+            <X className="w-6 h-6" />
+          </button>
+          <div className="inline-flex items-center gap-1 bg-yellow-400 text-emerald-950 text-[10px] font-extrabold uppercase px-3 py-1 rounded-full tracking-wider mb-3 animate-bounce">
+            <Sparkles className="w-3.5 h-3.5 fill-current" /> OFERTA EXCLUSIVA DE AGRADECIMENTO
+          </div>
+          <h2 className="font-display text-2xl md:text-3xl font-black leading-tight">
+            Coleção Família Bolsonaro! 🇧🇷
+          </h2>
+          <p className="text-xs opacity-90 mt-2 font-medium">
+            Você já garantiu sua foto espetacular! Que tal fazer história e completar seu álbum de patriota com os outros membros por apenas <strong>R$ 4,99</strong> cada? (75% de Desconto!)
+          </p>
+        </div>
+
+        <div className="overflow-y-auto flex-1 p-6 space-y-6">
+          <div className="grid grid-cols-1 gap-3">
+            {(Object.keys(CHARACTERS) as CharKey[]).map((key) => {
+              const ch = CHARACTERS[key];
+              return (
+                <div
+                  key={key}
+                  className="bg-card hover:bg-emerald-500/5 border border-border hover:border-emerald-500/30 rounded-2xl p-4 transition-all duration-300 flex items-center gap-4 group relative overflow-hidden"
+                >
+                  <img
+                    src={ch.example}
+                    alt={ch.name}
+                    className="w-16 h-16 rounded-full object-cover border-2 border-emerald-500/20 group-hover:border-emerald-500/50 transition-all flex-shrink-0"
+                  />
+                  <div className="flex-1">
+                    <div className="font-bold text-base text-foreground leading-tight">{ch.name}</div>
+                    <div className="text-[11px] text-muted-foreground mt-0.5">{ch.tagline} · {ch.sub.substring(0, 45)}...</div>
+                    <div className="flex items-center gap-2 mt-2">
+                      <span className="text-[11px] line-through text-muted-foreground">R$ 19,90</span>
+                      <span className="text-sm font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md">
+                        R$ 4,99
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      onSelectCharacter(key);
+                      onClose();
+                    }}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2.5 rounded-xl text-xs flex items-center gap-1.5 transition-all shadow-md group-hover:scale-105 active:scale-95 cursor-pointer whitespace-nowrap"
+                  >
+                    <span>Criar Foto</span>
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="bg-amber-500/5 border border-amber-500/20 rounded-2xl p-4 text-center">
+            <p className="text-[11px] text-amber-800 dark:text-amber-300 font-medium leading-relaxed">
+              ⭐ Essa oferta de R$ 4,99 é exclusiva e ficará disponível apenas enquanto esta página estiver aberta. Complete sua coleção e guarde essa recordação para sempre!
+            </p>
+          </div>
+        </div>
+
+        <div className="p-4 bg-muted border-t border-border flex items-center justify-between text-[10px] text-muted-foreground font-semibold flex-shrink-0">
+          <span>🔒 Transação protegida e imediata</span>
+          <button onClick={onClose} className="hover:text-foreground transition underline cursor-pointer">
+            Recusar e ver minha foto atual
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AdminLoginModal({
+  onClose,
+  onSuccess,
+}: {
+  onClose: () => void;
+  onSuccess: () => void;
+}) {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (username === "admin" && password === "patriaamada") {
+      toast.success("Login realizado com sucesso! Bem-vindo, Administrador! 🇧🇷");
+      onSuccess();
+    } else {
+      toast.error("Credenciais inválidas. Tente novamente.");
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
+      <div className="bg-background rounded-3xl max-w-sm w-full shadow-2xl border border-border overflow-hidden flex flex-col p-6 animate-in zoom-in-95 duration-200">
+        <div className="flex justify-between items-center mb-6">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-[oklch(0.52_0.16_145)] flex items-center justify-center text-white font-bold">
+              🛠️
+            </div>
+            <div className="font-display font-extrabold text-lg text-foreground">Painel de Acesso Dev</div>
+          </div>
+          <button onClick={onClose} className="p-1 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition cursor-pointer">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Usuário</label>
+            <input
+              type="text"
+              required
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              className="w-full bg-muted border border-border focus:border-[oklch(0.52_0.16_145)] focus:ring-1 focus:ring-[oklch(0.52_0.16_145)] rounded-xl py-3 px-4 text-sm outline-none transition"
+              placeholder="Digite o usuário"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Senha</label>
+            <input
+              type="password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full bg-muted border border-border focus:border-[oklch(0.52_0.16_145)] focus:ring-1 focus:ring-[oklch(0.52_0.16_145)] rounded-xl py-3 px-4 text-sm outline-none transition"
+              placeholder="Digite a senha"
+            />
+          </div>
+
+          <button
+            type="submit"
+            className="w-full bg-[oklch(0.52_0.16_145)] hover:bg-[oklch(0.45_0.16_145)] text-white font-bold py-3.5 rounded-xl transition cursor-pointer shadow-lg shadow-[oklch(0.52_0.16_145)]/20 mt-2"
+          >
+            Entrar no Painel Dev
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function DevDashboardModal({ onClose }: { onClose: () => void }) {
+  const callGetLogs = useServerFn(getGenerationsLog);
+  const [logs, setLogs] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    let active = true;
+    const fetchLogs = async () => {
+      try {
+        const res = await callGetLogs();
+        if (active && res.logs) {
+          setLogs(res.logs);
+        }
+      } catch (err) {
+        toast.error("Erro ao carregar logs.");
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+    fetchLogs();
+    return () => { active = false; };
+  }, [callGetLogs]);
+
+  const stats = useMemo(() => {
+    const total = logs.length;
+    const chars: Record<string, number> = {};
+    logs.forEach((l) => {
+      chars[l.character] = (chars[l.character] || 0) + 1;
+    });
+    return { total, chars };
+  }, [logs]);
+
+  const filteredLogs = useMemo(() => {
+    const s = search.toLowerCase().trim();
+    if (!s) return logs;
+    return logs.filter((l) => {
+      const charName = CHARACTERS[l.character as CharKey]?.name?.toLowerCase() || l.character.toLowerCase();
+      const ip = l.ip.toLowerCase();
+      const dateStr = new Date(l.timestamp).toLocaleString("pt-BR").toLowerCase();
+      return charName.includes(s) || ip.includes(s) || dateStr.includes(s) || (l.status && l.status.toLowerCase().includes(s));
+    });
+  }, [logs, search]);
+
+  const formatDate = (isoString: string) => {
+    try {
+      return new Date(isoString).toLocaleString("pt-BR", {
+        timeZone: "America/Sao_Paulo",
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      });
+    } catch {
+      return isoString;
+    }
+  };
+
+  const handleDownload = (url: string, char: string) => {
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `gerada-${char}-${Date.now()}.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success("Download iniciado!");
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 overflow-hidden">
+      <div className="bg-slate-950 text-slate-100 rounded-3xl max-w-5xl w-full h-[90vh] shadow-2xl border border-slate-800 overflow-hidden flex flex-col">
+        {/* Header */}
+        <div className="bg-slate-900 border-b border-slate-800 px-6 py-4 flex items-center justify-between sticky top-0 z-50 flex-shrink-0">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-500 border border-amber-500/20 flex items-center justify-center font-bold text-lg">
+              📊
+            </div>
+            <div>
+              <h2 className="font-display font-bold text-lg text-slate-50">Dashboard do Desenvolvedor</h2>
+              <p className="text-[10px] text-slate-400">Logs de Imagens Geradas (Local + Supabase)</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-slate-100 transition cursor-pointer">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Content Body */}
+        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+          {loading ? (
+            <div className="h-full flex flex-col items-center justify-center gap-3">
+              <Loader2 className="w-8 h-8 animate-spin text-amber-500" />
+              <p className="text-sm text-slate-400 font-medium">Carregando logs de geração...</p>
+            </div>
+          ) : (
+            <>
+              {/* Quick Stats Grid */}
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4.5">
+                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Geradas</div>
+                  <div className="font-display text-2xl font-black text-slate-100 mt-1">{stats.total}</div>
+                </div>
+                {(Object.keys(CHARACTERS) as CharKey[]).map((key) => {
+                  const ch = CHARACTERS[key];
+                  const count = stats.chars[key] || 0;
+                  return (
+                    <div key={key} className="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-4.5 flex items-center gap-3">
+                      <img src={ch.example} alt="" className="w-8 h-8 rounded-full object-cover border border-slate-700" />
+                      <div>
+                        <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{ch.short}</div>
+                        <div className="font-display text-lg font-black text-slate-200 mt-0.5">{count}</div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Filters Bar */}
+              <div className="flex flex-col sm:flex-row gap-3 bg-slate-900 border border-slate-800 rounded-2xl p-4">
+                <div className="flex-1">
+                  <input
+                    type="text"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="🔍 Filtrar logs por IP, personagem, status ou data/hora..."
+                    className="w-full bg-slate-950 border border-slate-800 focus:border-amber-500 rounded-xl py-2.5 px-4 text-sm text-slate-100 outline-none transition placeholder:text-slate-500"
+                  />
+                </div>
+                <div className="flex items-center gap-2 px-1 text-xs text-slate-400">
+                  <span>Mostrando {filteredLogs.length} de {logs.length} registros</span>
+                </div>
+              </div>
+
+              {/* Image & Log Grid */}
+              {filteredLogs.length === 0 ? (
+                <div className="text-center py-12 bg-slate-900/30 border border-dashed border-slate-800 rounded-2xl">
+                  <p className="text-slate-400 text-sm font-medium">Nenhum registro encontrado para a busca.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-4">
+                  {filteredLogs.map((l, index) => {
+                    const ch = CHARACTERS[l.character as CharKey] || { name: l.character, short: l.character, example: "" };
+                    return (
+                      <div key={index} className="bg-slate-900 border border-slate-800/80 hover:border-slate-700/80 rounded-2xl overflow-hidden flex flex-col group transition duration-300">
+                        {/* Thumbnail / Image Container */}
+                        <div className="aspect-square bg-slate-950 relative overflow-hidden flex-shrink-0">
+                          <img
+                            src={l.url}
+                            alt=""
+                            className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+                            loading="lazy"
+                          />
+                          {l.status && (
+                            <span className={`absolute top-2 right-2 px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider ${
+                              l.status === "paid"
+                                ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                                : "bg-amber-500/20 text-amber-400 border border-amber-500/30"
+                            }`}>
+                              {l.status === "paid" ? "Pago" : "Pendente"}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Metadata & Actions */}
+                        <div className="p-3.5 flex-1 flex flex-col justify-between">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-1.5">
+                              {ch.example && <img src={ch.example} alt="" className="w-4 h-4 rounded-full object-cover border border-slate-700" />}
+                              <span className="font-bold text-xs text-slate-200">{ch.name}</span>
+                            </div>
+                            <div className="text-[10px] text-slate-400 font-mono flex items-center gap-1">
+                              <span>🖥️</span> <span>{l.ip}</span>
+                            </div>
+                            <div className="text-[9px] text-slate-500 font-medium">
+                              📅 {formatDate(l.timestamp)}
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-2 mt-3 pt-2.5 border-t border-slate-800/60">
+                            <a
+                              href={l.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-1.5 px-2 rounded-lg text-[10px] text-center transition whitespace-nowrap"
+                            >
+                              Ver Original
+                            </a>
+                            <button
+                              onClick={() => handleDownload(l.url, l.character)}
+                              className="bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white border border-emerald-500/30 font-bold py-1.5 px-2 rounded-lg text-[10px] text-center transition cursor-pointer whitespace-nowrap"
+                            >
+                              Baixar Foto
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="bg-slate-900 border-t border-slate-800 px-6 py-4 flex items-center justify-between text-[11px] text-slate-400 flex-shrink-0">
+          <span>Total de {filteredLogs.length} registros exibidos</span>
+          <span className="font-mono text-[9px] opacity-40">admin@patriaamada</span>
         </div>
       </div>
     </div>

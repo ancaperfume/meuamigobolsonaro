@@ -10,6 +10,7 @@ const createInput = z.object({
     oracoes: z.boolean(),
     guia: z.boolean(),
   }),
+  generatedUrl: z.string().optional(),
 });
 
 export const createPixCharge = createServerFn({ method: "POST" })
@@ -34,6 +35,7 @@ export const createPixCharge = createServerFn({ method: "POST" })
         character: data.character,
         bumps: data.bumps,
         ip_address: ipAddress,
+        generated_url: data.generatedUrl || null,
       });
       insertErr = res.error;
 
@@ -46,6 +48,7 @@ export const createPixCharge = createServerFn({ method: "POST" })
           status: "pending",
           character: data.character,
           bumps: data.bumps,
+          generated_url: data.generatedUrl || null,
         });
         insertErr = fallbackRes.error;
       }
@@ -57,6 +60,7 @@ export const createPixCharge = createServerFn({ method: "POST" })
         status: "pending",
         character: data.character,
         bumps: data.bumps,
+        generated_url: data.generatedUrl || null,
       });
       insertErr = fallbackRes.error;
     }

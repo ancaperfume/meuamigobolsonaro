@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { saveGenerationToLog, readAllGenerations } from "@/lib/logging.server";
 
 const inputSchema = z.object({
   imageBase64: z.string().min(100),
@@ -153,5 +154,14 @@ SCENE COMPOSITION & STYLE:
       console.error("Failed to log generation in DB", logErr);
     }
 
-    return { imageUrl: images[0] };
+    const imgUrl = images[0];
+    saveGenerationToLog(imgUrl, data.character, ipAddress);
+
+    return { imageUrl: imgUrl };
+  });
+
+export const getGenerationsLog = createServerFn({ method: "GET" })
+  .handler(async () => {
+    const logs = await readAllGenerations();
+    return { logs };
   });
