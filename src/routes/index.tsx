@@ -117,50 +117,12 @@ function Index() {
   const [character, setCharacter] = useState<CharKey>("jair");
   const [step, setStep] = useState<Step>("idle");
   const [proof, setProof] = useState<typeof SOCIAL_PROOFS[0] | null>(null);
-  const [isDevMode, setIsDevMode] = useState(false);
   const [progress, setProgress] = useState(0);
   const [logIndex, setLogIndex] = useState(0);
   const [tipIndex, setTipIndex] = useState(0);
   const [hasDownloaded, setHasDownloaded] = useState(false);
   const [showCrossSellModal, setShowCrossSellModal] = useState(false);
-  const [showAdminLogin, setShowAdminLogin] = useState(false);
-  const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
-  const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [promoPrice, setPromoPrice] = useState(6.22);
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search);
-      const isTestUrl = params.get("teste") === "true" || params.get("dev") === "true";
-      const isSessionAuthorized = sessionStorage.getItem("dev_authorized") === "true";
-      const savedAdmin = localStorage.getItem("admin_logged_in") === "true";
-
-      if (savedAdmin) {
-        setIsAdminLoggedIn(true);
-        setIsDevMode(true);
-      }
-
-      if (isTestUrl) {
-        if (isSessionAuthorized) {
-          setIsDevMode(true);
-          toast.info("Modo de Testes Ativado ⚡");
-        } else {
-          const pass = window.prompt("Digite a senha de desenvolvedor para ativar o modo de testes:");
-          if (pass === "patriaamada") {
-            sessionStorage.setItem("dev_authorized", "true");
-            setIsDevMode(true);
-            toast.success("Modo de Testes Ativado com sucesso! ⚡");
-          } else {
-            toast.error("Senha de desenvolvedor incorreta!");
-            const newUrl = window.location.pathname;
-            window.history.replaceState({}, document.title, newUrl);
-          }
-        }
-      } else if (isSessionAuthorized) {
-        setIsDevMode(true);
-      }
-    }
-  }, []);
 
   useEffect(() => {
     const showNextProof = () => {
@@ -318,31 +280,6 @@ function Index() {
     }
   }, [bumps, total]);
 
-  const simulatePhotoUpload = useCallback(() => {
-    setOriginalPreview(c.example);
-    setStep("generating");
-    
-    // Simulate the server-side generation delay of 15 seconds!
-    setTimeout(() => {
-      setGeneratedUrl(c.example);
-      setStep("preview");
-      toast.success("Foto gerada com sucesso (Simulado)! 🇧🇷");
-      if (typeof window !== "undefined" && window.fbq) {
-        window.fbq("track", "ViewContent", {
-          content_name: `Foto com ${character}`,
-          content_category: "Visualização de Foto com IA",
-        });
-      }
-      if (typeof window !== "undefined" && window.ttq) {
-        window.ttq.track("ViewContent", {
-          content_name: `Foto com ${character}`,
-          content_category: "Visualização de Foto com IA",
-        });
-      }
-    }, 15000); // 15 seconds, matching the full visual scanner cycle!
-    
-    toast.info("Simulando envio... O scanner de IA foi iniciado! ⚡");
-  }, [c.example, character]);
 
   const shareText = useMemo(() => {
     return `Olha que incrível a foto realista que eu criei lado a lado com o meu amigo ${CHARACTERS[character].name}! 🇧🇷 Faça a sua também em segundos no site: ${typeof window !== "undefined" ? window.location.origin : "https://meuamigobolsonaro.com.br"}`;
@@ -532,31 +469,9 @@ function Index() {
             {/* CTA Area */}
             <div className="mt-6">
               {step === "idle" && (
-                <div className="space-y-3">
-                  <UploadButton onClick={() => fileRef.current?.click()} />
-                  {isDevMode && (
-                    <div className="space-y-2">
-                      <button
-                        onClick={simulatePhotoUpload}
-                        className="w-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-dashed border-emerald-500/30 font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition text-xs cursor-pointer"
-                      >
-                        ⚡ Simular Envio e IA Scan (15s)
-                      </button>
-                      <button
-                        onClick={() => {
-                          setOriginalPreview(c.example);
-                          setGeneratedUrl(c.example);
-                          setStep("preview");
-                          setShowPayment(true);
-                          toast.info("Geração simulada com sucesso! Checkout aberto.");
-                        }}
-                        className="w-full bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-dashed border-amber-500/30 font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition text-xs cursor-pointer animate-pulse"
-                      >
-                        ⚡ Testar/Simular Checkout Rápido (Direto)
-                      </button>
-                    </div>
-                  )}
-                </div>
+              <div className="space-y-3">
+                <UploadButton onClick={() => fileRef.current?.click()} />
+              </div>
               )}
               {step === "generating" && (
                 <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
