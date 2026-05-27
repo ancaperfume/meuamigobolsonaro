@@ -1,5 +1,4 @@
 import { createServerFn } from "@tanstack/react-start";
-import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
@@ -19,55 +18,20 @@ export const createPixCharge = createServerFn({ method: "POST" })
     const apiKey = process.env.NEXUSPAG_API_KEY;
     if (!apiKey) throw new Error("Chave NEXUSPAG_API_KEY ausente nas variáveis de ambiente da Lovable.");
 
-    const request = getRequest();
-    const ipAddress = request.headers.get("cf-connecting-ip") || 
-                      request.headers.get("x-forwarded-for")?.split(",")[0].trim() || 
-                      "127.0.0.1";
-
     const externalId = `bma-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
-    let insertErr: any = null;
-    try {
-      const res = await supabaseAdmin.from("orders").insert({
-        external_id: externalId,
-        amount: data.amount,
-        status: "pending",
-        character: data.character,
-        bumps: data.bumps,
-        ip_address: ipAddress,
-        generated_url: data.generatedUrl || null,
-      });
-      insertErr = res.error;
-
-      // If ANY error occurs on the first insert, try to insert without ip_address as a robust fallback
-      if (insertErr) {
-        console.warn("First orders insert failed, retrying insert without ip_address:", insertErr.message);
-        const fallbackRes = await supabaseAdmin.from("orders").insert({
-          external_id: externalId,
-          amount: data.amount,
-          status: "pending",
-          character: data.character,
-          bumps: data.bumps,
-          generated_url: data.generatedUrl || null,
-        });
-        insertErr = fallbackRes.error;
-      }
-    } catch (e: any) {
-      console.warn("Supabase orders insert failed with exception, retrying fallback", e);
-      const fallbackRes = await supabaseAdmin.from("orders").insert({
-        external_id: externalId,
-        amount: data.amount,
-        status: "pending",
-        character: data.character,
-        bumps: data.bumps,
-        generated_url: data.generatedUrl || null,
-      });
-      insertErr = fallbackRes.error;
-    }
+    const { error: insertErr } = await supabaseAdmin.from("orders").insert({
+      external_id: externalId,
+      amount: data.amount,
+      status: "pending",
+      character: data.character,
+      bumps: data.bumps,
+      generated_url: data.generatedUrl || null,
+    });
 
     if (insertErr) {
       console.error("orders insert error", insertErr);
-      throw new Error(`Erro ao registrar pedido no Supabase: ${insertErr.message} (${insertErr.details || insertErr.hint || ""})`);
+      throw new Error(`Erro ao registrar pedido no banco: ${insertErr.message} (${insertErr.details || insertErr.hint || ""})`);
     }
 
     const origin =
@@ -122,20 +86,6 @@ export const createPixCharge = createServerFn({ method: "POST" })
       json.qr_code_image ?? 
       json.qrcode_image ?? 
       "";
-      
-    const nexuspagId: string | undefined =
-      nestedData.id ?? 
-      nestedData.transaction_id ?? 
-      nestedData.txid ?? 
-      nestedData.uuid ?? 
-      json.id;
-
-    if (nexuspagId) {
-      await supabaseAdmin
-        .from("orders")
-        .update({ nexuspag_id: nexuspagId })
-        .eq("external_id", externalId);
-    }
 
     if (!qrCode && !qrCodeImage) {
       console.error("NexusPag response missing QR fields", json);
@@ -146,7 +96,7 @@ export const createPixCharge = createServerFn({ method: "POST" })
       externalId,
       qrCode,
       qrCodeImage,
-      raw: { id: nexuspagId },
+      raw: json,
     };
   });
 

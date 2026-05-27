@@ -1,7 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { saveGenerationToLog, readAllGenerations, getAdminStats } from "@/lib/logging.server";
 
 const inputSchema = z.object({
@@ -20,55 +18,6 @@ const characterPrompts: Record<string, string> = {
 export const generatePhoto = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => inputSchema.parse(data))
   .handler(async ({ data }) => {
-    // Get client IP address
-    const request = getRequest();
-    const ipAddress = request.headers.get("cf-connecting-ip") || 
-                      request.headers.get("x-forwarded-for")?.split(",")[0].trim() || 
-                      "127.0.0.1";
-
-    // 🛡️ ABUSE PROTECTION: Max 3 free previews in 24h unless they completed a payment
-    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-    let genCount = 0;
-    let paidCount = 0;
-
-    try {
-      const { count, error } = await supabaseAdmin
-        .from("generations")
-        .select("*", { count: "exact", head: true })
-        .eq("ip_address", ipAddress)
-        .gte("created_at", oneDayAgo);
-
-      if (!error && count !== null) {
-        genCount = count;
-      } else if (error) {
-        console.warn("Generations query failed (table probably doesn't exist yet):", error.message);
-      }
-
-      if (genCount >= 3) {
-        const { count: paid, error: paidErr } = await supabaseAdmin
-          .from("orders")
-          .select("*", { count: "exact", head: true })
-          .eq("ip_address", ipAddress)
-          .eq("status", "paid");
-
-        if (!paidErr && paid !== null) {
-          paidCount = paid;
-        } else if (paidErr && paidErr.code === "42703") {
-          console.warn("ip_address column missing in orders table, skipping restriction");
-          paidCount = 1; // Treat as paid to allow flow to continue
-        } else if (paidErr) {
-          console.warn("Paid count query failed:", paidErr.message);
-        }
-      }
-    } catch (dbErr) {
-      console.warn("Database rate limiting check failed with exception, allowing request to proceed:", dbErr);
-      genCount = 0; // Skip restriction on database failure
-    }
-
-    if (genCount >= 3 && paidCount === 0) {
-      throw new Error("Você atingiu o limite de 3 fotos gratuitas. Por favor, conclua o pagamento de uma de suas fotos geradas no celular para continuar criando novas!");
-    }
-
     // Obfuscated OpenRouter key to prevent GitHub secret scanner block
     const keyParts = [
       "sk-or-",
@@ -149,27 +98,6 @@ SCENE COMPOSITION & STYLE:
 
     const imgUrl = images[0];
 
-    // Log the successful generation for this IP in generations table
-    try {
-      await supabaseAdmin.from("generations").insert({ ip_address: ipAddress });
-    } catch (logErr) {
-      console.error("Failed to log generation in public.generations", logErr);
-    }
-
-    // Log the successful generation in the public.orders table as a preview to enable pulling in the dashboard
-    try {
-      await supabaseAdmin.from("orders").insert({
-        external_id: `gen-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-        amount: 0,
-        status: "generated_preview",
-        character: data.character,
-        generated_url: imgUrl,
-        ip_address: ipAddress,
-      });
-    } catch (logErr) {
-      console.error("Failed to log generation in public.orders", logErr);
-    }
-
     return { imageUrl: imgUrl };
   });
 
@@ -179,4 +107,3 @@ export const getGenerationsLog = createServerFn({ method: "GET" })
     const stats = await getAdminStats();
     return { logs, stats };
   });
-
