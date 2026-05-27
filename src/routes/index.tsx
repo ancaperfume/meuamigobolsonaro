@@ -1119,9 +1119,11 @@ function PaymentModal({
       setPix(res);
       setPhase("pix");
       if (typeof window !== "undefined" && window.fbq) {
+        window.fbq("track", "AddToCart", { value: total, currency: "BRL" });
         window.fbq("track", "InitiateCheckout", { value: total, currency: "BRL" });
       }
       if (typeof window !== "undefined" && window.ttq) {
+        window.ttq.track("AddToCart", { value: total, currency: "BRL" });
         window.ttq.track("InitiateCheckout", { value: total, currency: "BRL" });
       }
     } catch (e: any) {
@@ -1583,9 +1585,11 @@ function UpsellModal({
       setPix(res);
       setPhase("pix");
       if (typeof window !== "undefined" && window.fbq) {
+        window.fbq("track", "AddToCart", { value: 27.00, currency: "BRL" });
         window.fbq("track", "InitiateCheckout", { value: 27.00, currency: "BRL" });
       }
       if (typeof window !== "undefined" && window.ttq) {
+        window.ttq.track("AddToCart", { value: 27.00, currency: "BRL" });
         window.ttq.track("InitiateCheckout", { value: 27.00, currency: "BRL" });
       }
     } catch (e: any) {
