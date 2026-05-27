@@ -14,9 +14,8 @@ function createSupabaseAdminClient() {
       ...(!SUPABASE_URL ? ['SUPABASE_URL'] : []),
       ...(!SUPABASE_SERVICE_ROLE_KEY ? ['SUPABASE_SERVICE_ROLE_KEY'] : []),
     ];
-    const message = `Missing Supabase environment variable(s): ${missing.join(', ')}. Connect Supabase in Lovable Cloud.`;
-    console.error(`[Supabase] ${message}`);
-    throw new Error(message);
+    console.warn(`[Supabase] Missing env var(s): ${missing.join(', ')}. Admin functions will return empty data.`);
+    return null;
   }
 
   return createClient<Database>(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
@@ -28,14 +27,25 @@ function createSupabaseAdminClient() {
   });
 }
 
-let _supabaseAdmin: ReturnType<typeof createSupabaseAdminClient> | undefined;
+let _supabaseAdmin: ReturnType<typeof createClient<Database>> | null | undefined;
 
-// Server-side Supabase client with service role - bypasses RLS
-// SECURITY: Only use this for trusted server-side operations, never expose to client code
-// Import like: import { supabaseAdmin } from "@/integrations/supabase/client.server";
-export const supabaseAdmin = new Proxy({} as ReturnType<typeof createSupabaseAdminClient>, {
+function getSupabaseAdmin() {
+  if (_supabaseAdmin === undefined) _supabaseAdmin = createSupabaseAdminClient();
+  return _supabaseAdmin;
+}
+
+export const supabaseAdmin = new Proxy({} as ReturnType<typeof createClient<Database>>, {
   get(_, prop, receiver) {
-    if (!_supabaseAdmin) _supabaseAdmin = createSupabaseAdminClient();
-    return Reflect.get(_supabaseAdmin, prop, receiver);
+    const client = getSupabaseAdmin();
+    if (!client) {
+      const noop = () => ({ data: null, error: new Error("Supabase not configured") });
+      if (prop === "from") return () => ({
+        select: () => ({ order: noop, eq: noop, not: noop, maybeSingle: noop }),
+        insert: () => ({ select: noop }),
+        update: () => ({ eq: noop }),
+      });
+      return noop;
+    }
+    return Reflect.get(client, prop, receiver);
   },
 });
