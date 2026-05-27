@@ -277,8 +277,8 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
       <nav className="sticky top-0 z-50 bg-[#0a0a0f]/95 backdrop-blur-xl border-b border-zinc-800/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-violet-500/10 border border-violet-500/20 flex items-center justify-center">
-              <ShieldCheck className="w-4.5 h-4.5 text-violet-400" />
+            <div className="w-8 h-8 rounded-lg bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-base">
+              🇧🇷
             </div>
             <div>
               <div className="text-sm font-bold text-white leading-none">Admin Panel</div>
