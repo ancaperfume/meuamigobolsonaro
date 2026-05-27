@@ -85,6 +85,65 @@ export async function readAllGenerations() {
   return generations;
 }
 
+export async function getUserPhotosByIP(ip: string) {
+  const photos: {
+    url: string;
+    character: string;
+    timestamp: string;
+    status: string;
+  }[] = [];
+
+  try {
+    const { data: genRows, error: genErr } = await supabaseAdmin
+      .from("generations")
+      .select("url, character, created_at, status")
+      .eq("ip_address", ip)
+      .not("url", "is", null)
+      .order("created_at", { ascending: false });
+    if (!genErr && genRows) {
+      for (const row of genRows) {
+        if (row.url) {
+          photos.push({
+            url: row.url,
+            character: row.character || "",
+            timestamp: row.created_at,
+            status: row.status,
+          });
+        }
+      }
+    }
+  } catch (e) {
+    console.error("Failed to read user generations", e);
+  }
+
+  try {
+    const { data: orderRows, error: orderErr } = await supabaseAdmin
+      .from("orders")
+      .select("character, generated_url, created_at, status")
+      .eq("ip_address", ip)
+      .not("generated_url", "is", null)
+      .order("created_at", { ascending: false });
+    if (!orderErr && orderRows) {
+      for (const row of orderRows) {
+        const exists = photos.some((p) => p.url === row.generated_url);
+        if (!exists && row.generated_url) {
+          photos.push({
+            url: row.generated_url,
+            character: row.character || "",
+            timestamp: row.created_at,
+            status: row.status === "paid" ? "paid" : "generated",
+          });
+        }
+      }
+    }
+  } catch (e) {
+    console.error("Failed to read user orders", e);
+  }
+
+  photos.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  return photos;
+}
+
 export async function getAdminStats() {
   try {
     // Count unique IPs from generations table

@@ -1,6 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { saveGenerationToLog, readAllGenerations, getAdminStats } from "@/lib/logging.server";
+import {
+  saveGenerationToLog,
+  readAllGenerations,
+  getAdminStats,
+  getUserPhotosByIP,
+} from "@/lib/logging.server";
 
 const inputSchema = z.object({
   imageBase64: z.string().min(100),
@@ -125,4 +130,10 @@ export const getGenerationsLog = createServerFn({ method: "GET" }).handler(async
   const logs = await readAllGenerations();
   const stats = await getAdminStats();
   return { logs, stats };
+});
+
+export const getUserPhotos = createServerFn({ method: "GET" }).handler(async ({ request }) => {
+  const ip = getClientIP(request);
+  const photos = await getUserPhotosByIP(ip);
+  return { photos, ip };
 });
