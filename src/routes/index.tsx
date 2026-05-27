@@ -903,7 +903,6 @@ function PaymentModal({
   total,
   onClose,
   onPaid,
-  isDevMode,
   generatedUrl,
 }: {
   character: string;
@@ -913,7 +912,6 @@ function PaymentModal({
   total: number;
   onClose: () => void;
   onPaid: () => void;
-  isDevMode: boolean;
   generatedUrl: string | null;
 }) {
   const callCreate = useServerFn(createPixCharge);
@@ -1270,17 +1268,6 @@ function PaymentModal({
                 <span className="font-semibold animate-pulse">Aguardando confirmação do pagamento…</span>
               </div>
 
-              {/* SIMULAR CONFIRMAÇÃO DE PAGAMENTO E ENTREGA */}
-              {isDevMode && (
-                <button
-                  type="button"
-                  onClick={onPaid}
-                  className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 text-xs shadow-md shadow-amber-500/20 cursor-pointer animate-pulse-slow transition active:scale-98"
-                >
-                  ⚡ Simular Confirmação e Entregar Imagem
-                </button>
-              )}
-
               <div className="text-[10px] text-center text-muted-foreground font-medium">
                 🔒 Liberação automática imediata. Não feche esta janela após pagar.
               </div>
@@ -1326,12 +1313,10 @@ function OrderBump({
 function UpsellModal({
   type,
   characterKey,
-  isDevMode,
   onClose,
 }: {
   type: "darkhorse" | "grupo";
   characterKey: CharKey;
-  isDevMode: boolean;
   onClose: (bought: boolean) => void;
 }) {
   const callCreate = useServerFn(createPixCharge);
