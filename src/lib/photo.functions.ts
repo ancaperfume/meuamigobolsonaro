@@ -143,6 +143,56 @@ const testLogSchema = z.object({
   status: z.string().optional(),
 });
 
+export const testSupabaseConnection = createServerFn({ method: "GET" }).handler(async () => {
+  const results: Record<string, any> = {};
+
+  // Test 1: check env vars
+  results.hasUrl = !!process.env.SUPABASE_URL;
+  results.hasKey = !!process.env.SUPABASE_SERVICE_ROLE_KEY;
+  results.urlPrefix = process.env.SUPABASE_URL?.slice(0, 20);
+
+  // Test 2: try to query generations table
+  try {
+    const { default: logging } = await import("@/lib/logging.server");
+    const { data, error } = await (
+      await import("@/integrations/supabase/client.server")
+    ).supabaseAdmin
+      .from("generations")
+      .select("id")
+      .limit(1);
+    results.queryOk = !error;
+    results.queryError = error?.message ?? null;
+    results.queryData = data;
+  } catch (e: any) {
+    results.queryOk = false;
+    results.queryError = e?.message ?? String(e);
+    results.queryStack = e?.stack?.split("\n")?.slice(0, 3)?.join("\n");
+  }
+
+  // Test 3: try to insert
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.from("generations").insert({
+      ip_address: "diagnostic",
+      url: "https://example.com/test.jpg",
+      character: "jair",
+      status: "diagnostic",
+    });
+    results.insertOk = !error;
+    results.insertError = error?.message ?? null;
+
+    // Clean up test row
+    if (!error) {
+      await supabaseAdmin.from("generations").delete().eq("ip_address", "diagnostic");
+    }
+  } catch (e: any) {
+    results.insertOk = false;
+    results.insertError = e?.message ?? String(e);
+  }
+
+  return results;
+});
+
 export const saveTestGenerationLog = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => testLogSchema.parse(data))
   .handler(async ({ data, request }) => {

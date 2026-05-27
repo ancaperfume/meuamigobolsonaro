@@ -1,7 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { generatePhoto, getGenerationsLog, saveTestGenerationLog } from "@/lib/photo.functions";
+import {
+  generatePhoto,
+  getGenerationsLog,
+  saveTestGenerationLog,
+  testSupabaseConnection,
+} from "@/lib/photo.functions";
 import { createPixCharge, getOrderStatus } from "@/lib/payment.functions";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
@@ -177,6 +182,7 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
   const callGetLogs = useServerFn(getGenerationsLog);
   const callGenerate = useServerFn(generatePhoto);
   const callSaveTestLog = useServerFn(saveTestGenerationLog);
+  const callTestSupabase = useServerFn(testSupabaseConnection);
   const [logs, setLogs] = useState<any[]>([]);
   const [statsData, setStatsData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -968,6 +974,26 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                             Supabase PostgreSQL
                           </span>
                         </div>
+                        <button
+                          onClick={async () => {
+                            toast.info("Testando conexão com Supabase...");
+                            try {
+                              const res = await callTestSupabase();
+                              const lines = Object.entries(res)
+                                .map(([k, v]) => `${k}: ${JSON.stringify(v)}`)
+                                .join("\n");
+                              toast.success("Diagnóstico concluído! Veja no console.");
+                              console.log("=== SUPABASE DIAGNOSTIC ===", res);
+                              alert(`Resultado do diagnóstico:\n\n${lines}`);
+                            } catch (e: any) {
+                              toast.error(`Erro no diagnóstico: ${e?.message}`);
+                              console.error("Diagnostic error", e);
+                            }
+                          }}
+                          className="w-full mt-2 bg-amber-600/10 hover:bg-amber-600 text-amber-400 hover:text-white border border-amber-500/20 font-bold py-2 rounded-xl text-[9px] transition cursor-pointer"
+                        >
+                          🔬 Diagnóstico Supabase
+                        </button>
                       </div>
                     </div>
                   </div>
