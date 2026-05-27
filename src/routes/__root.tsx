@@ -80,6 +80,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "Meu Amigo Bolsonaro" },
+      { name: "facebook-domain-verification", content: "SEU_CODIGO_AQUI" },
       { name: "description", content: "Create AI-generated photos with Brazilian political figures." },
       { name: "author", content: "Lovable" },
       { property: "og:title", content: "Meu Amigo Bolsonaro" },
