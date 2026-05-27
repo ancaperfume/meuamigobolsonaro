@@ -126,9 +126,27 @@ function Index() {
   useEffect(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
-      if (params.get("teste") === "true" || params.get("dev") === "true") {
+      const isTestUrl = params.get("teste") === "true" || params.get("dev") === "true";
+      const isSessionAuthorized = sessionStorage.getItem("dev_authorized") === "true";
+
+      if (isTestUrl) {
+        if (isSessionAuthorized) {
+          setIsDevMode(true);
+          toast.info("Modo de Testes Ativado ⚡");
+        } else {
+          const pass = window.prompt("Digite a senha de desenvolvedor para ativar o modo de testes:");
+          if (pass === "patriaamada") {
+            sessionStorage.setItem("dev_authorized", "true");
+            setIsDevMode(true);
+            toast.success("Modo de Testes Ativado com sucesso! ⚡");
+          } else {
+            toast.error("Senha de desenvolvedor incorreta!");
+            const newUrl = window.location.pathname;
+            window.history.replaceState({}, document.title, newUrl);
+          }
+        }
+      } else if (isSessionAuthorized) {
         setIsDevMode(true);
-        toast.info("Modo de Testes Ativado ⚡");
       }
     }
   }, []);
