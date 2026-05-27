@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createHmac, timingSafeEqual } from "crypto";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 export const Route = createFileRoute("/api/public/nexuspag-webhook")({
   server: {
@@ -38,35 +37,7 @@ export const Route = createFileRoute("/api/public/nexuspag-webhook")({
           return new Response("Invalid JSON", { status: 400 });
         }
 
-        // Try to read fields under several possible keys
-        const event: string =
-          payload.event ?? payload.type ?? payload.status_event ?? "";
-        const data = payload.data ?? payload;
-        const externalId: string | undefined =
-          data.external_id ?? data.externalId ?? data.reference ?? payload.external_id;
-        const status: string | undefined =
-          data.status ?? payload.status;
-
-        if (!externalId) {
-          console.warn("Webhook without external_id", payload);
-          return new Response("ok", { status: 200 });
-        }
-
-        const isPaid =
-          event === "payment.confirmed" ||
-          status === "paid" ||
-          status === "confirmed" ||
-          status === "completed" ||
-          status === "approved";
-
-        if (isPaid) {
-          const { error } = await supabaseAdmin
-            .from("orders")
-            .update({ status: "paid", paid_at: new Date().toISOString() })
-            .eq("external_id", externalId)
-            .eq("status", "pending");
-          if (error) console.error("orders update error", error);
-        }
+        console.log("NexusPag webhook received", JSON.stringify(payload));
 
         return new Response("ok", { status: 200 });
       },

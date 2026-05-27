@@ -1084,6 +1084,10 @@ function PaymentModal({
     }
   };
 
+  const confirmPayment = useCallback(() => {
+    onPaid();
+  }, [onPaid]);
+
   const copy = async (txt: string) => {
     try {
       await navigator.clipboard.writeText(txt);
@@ -1428,8 +1432,15 @@ function PaymentModal({
                 </span>
               </div>
 
+              <button
+                onClick={confirmPayment}
+                className="w-full py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-lg transition active:scale-98 flex items-center justify-center gap-2"
+              >
+                ✅ JÁ PAGUEI — Liberar minha foto
+              </button>
+
               <div className="text-[10px] text-center text-muted-foreground font-medium">
-                🔒 Liberação automática imediata. Não feche esta janela após pagar.
+                🔒 Se você já pagou, clique no botão acima para liberar sua foto automaticamente.
               </div>
             </div>
           )}
@@ -1575,11 +1586,21 @@ function UpsellModal({
   // Poll order status
   useEffect(() => {
     if (phase !== "pix" || !pix) return;
+    const fireConversion = () => {
+      if (typeof window !== "undefined" && window.fbq) {
+        window.fbq("track", "Purchase", { value: 27.0, currency: "BRL" });
+      }
+      if (typeof window !== "undefined" && window.ttq) {
+        window.ttq.track("CompletePayment", { value: 27.0, currency: "BRL" });
+        window.ttq.track("Purchase", { value: 27.0, currency: "BRL" });
+      }
+    };
     let active = true;
     const tick = async () => {
       try {
         const res = await callStatus({ data: { externalId: pix.externalId } });
         if (active && res.status === "paid") {
+          fireConversion();
           toast.success(content.toastSuccess);
           if (type === "darkhorse") {
             const link = document.createElement("a");
@@ -1630,6 +1651,28 @@ function UpsellModal({
       setLoading(false);
     }
   };
+
+  const confirmUpsellPayment = useCallback(() => {
+    if (typeof window !== "undefined" && window.fbq) {
+      window.fbq("track", "Purchase", { value: 27.0, currency: "BRL" });
+    }
+    if (typeof window !== "undefined" && window.ttq) {
+      window.ttq.track("CompletePayment", { value: 27.0, currency: "BRL" });
+      window.ttq.track("Purchase", { value: 27.0, currency: "BRL" });
+    }
+    toast.success(content.toastSuccess);
+    if (type === "darkhorse") {
+      const link = document.createElement("a");
+      link.href = content.downloadFile;
+      link.download = content.downloadName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } else {
+      window.open(content.downloadFile, "_blank");
+    }
+    onClose(true);
+  }, [content, type, onClose]);
 
   const copy = async (txt: string) => {
     try {
@@ -1826,8 +1869,15 @@ function UpsellModal({
                 </span>
               </div>
 
+              <button
+                onClick={confirmUpsellPayment}
+                className="w-full py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-lg transition active:scale-98 flex items-center justify-center gap-2"
+              >
+                ✅ JÁ PAGUEI — Liberar meu conteúdo
+              </button>
+
               <div className="text-[10px] text-center text-muted-foreground font-medium">
-                🔒 Liberação e download automático imediato. Não feche essa tela.
+                🔒 Se você já pagou, clique no botão acima para liberar o conteúdo.
               </div>
             </div>
           )}

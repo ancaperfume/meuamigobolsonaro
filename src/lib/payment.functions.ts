@@ -1,6 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 const createInput = z.object({
   amount: z.number().min(1).max(1000),
@@ -19,20 +18,6 @@ export const createPixCharge = createServerFn({ method: "POST" })
     if (!apiKey) throw new Error("Chave NEXUSPAG_API_KEY ausente nas variáveis de ambiente da Lovable.");
 
     const externalId = `bma-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-
-    const { error: insertErr } = await supabaseAdmin.from("orders").insert({
-      external_id: externalId,
-      amount: data.amount,
-      status: "pending",
-      character: data.character,
-      bumps: data.bumps,
-      generated_url: data.generatedUrl || null,
-    });
-
-    if (insertErr) {
-      console.error("orders insert error", insertErr);
-      throw new Error(`Erro ao registrar pedido no banco: ${insertErr.message} (${insertErr.details || insertErr.hint || ""})`);
-    }
 
     const origin =
       process.env.PUBLIC_APP_URL ??
@@ -105,15 +90,33 @@ const statusInput = z.object({ externalId: z.string().min(5).max(64) });
 export const getOrderStatus = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => statusInput.parse(data))
   .handler(async ({ data }) => {
-    const { data: row, error } = await supabaseAdmin
-      .from("orders")
-      .select("status, paid_at")
-      .eq("external_id", data.externalId)
-      .maybeSingle();
-
-    if (error) {
-      console.error("getOrderStatus error", error);
-      throw new Error("Erro ao consultar pedido.");
+    const apiKey = process.env.NEXUSPAG_API_KEY;
+    if (!apiKey) {
+      return { status: "pending", paidAt: null };
     }
-    return { status: row?.status ?? "pending", paidAt: row?.paid_at ?? null };
+
+    try {
+      const resp = await fetch(
+        `https://nexuspag.com/api/pix/status?external_id=${encodeURIComponent(data.externalId)}`,
+        {
+          headers: { "x-api-key": apiKey },
+        },
+      );
+      if (resp.ok) {
+        const json: any = await resp.json();
+        const s: string =
+          json.status ?? json.data?.status ?? json.transaction?.status ?? "pending";
+        const isPaid =
+          s === "paid" ||
+          s === "confirmed" ||
+          s === "completed" ||
+          s === "approved" ||
+          s === "finished";
+        return { status: isPaid ? "paid" : "pending", paidAt: isPaid ? new Date().toISOString() : null };
+      }
+    } catch (e) {
+      console.error("NexusPag status check error", e);
+    }
+
+    return { status: "pending", paidAt: null };
   });

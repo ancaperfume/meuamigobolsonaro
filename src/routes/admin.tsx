@@ -183,6 +183,7 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
   const callGenerate = useServerFn(generatePhoto);
   const callSaveTestLog = useServerFn(saveTestGenerationLog);
   const callTestSupabase = useServerFn(testSupabaseConnection);
+  const callCreatePix = useServerFn(createPixCharge);
   const [logs, setLogs] = useState<any[]>([]);
   const [statsData, setStatsData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -196,6 +197,8 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
   const [testPreview, setTestPreview] = useState<string | null>(null);
   const [testGeneratedUrl, setTestGeneratedUrl] = useState<string | null>(null);
   const testFileRef = useRef<HTMLInputElement>(null);
+  const [simPix, setSimPix] = useState<{ qrCode: string; qrCodeImage: string; externalId: string } | null>(null);
+  const [simPixLoading, setSimPixLoading] = useState(false);
 
   const fetchData = useCallback(async () => {
     try {
@@ -855,22 +858,112 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                     <div className="admin-card p-5 space-y-3">
                       <h3 className="text-sm font-bold text-white flex items-center gap-2">
                         <Zap className="w-4 h-4 text-amber-400" />
-                        Simular Funil
+                        Jornada Completa
                       </h3>
                       <p className="text-[10px] text-zinc-600 leading-relaxed">
-                        Teste cada etapa do funil de vendas. Os logs aparecem em{" "}
-                        <strong className="text-zinc-400">Logs &amp; Fotos</strong>.
+                        Simule a jornada completa do cliente com Pix real via NexusPag.
                       </p>
-                      <div className="space-y-1.5">
+
+                      {/* Step 1: Generate Pix */}
+                      {!simPix && (
                         <button
                           onClick={async () => {
-                            toast.info("Simulando visita...");
-                            window.open("/", "_blank");
+                            setSimPixLoading(true);
+                            toast.info("Gerando Pix real via NexusPag...");
+                            try {
+                              const ch = CHARACTERS[testCharacter];
+                              const res = await callCreatePix({
+                                data: {
+                                  amount: 6.22,
+                                  character: testCharacter,
+                                  bumps: { oracoes: false, guia: false },
+                                },
+                              });
+                              setSimPix({
+                                qrCode: res.qrCode,
+                                qrCodeImage: res.qrCodeImage,
+                                externalId: res.externalId,
+                              });
+                              toast.success("Pix gerado com sucesso! 💳");
+                            } catch (e: any) {
+                              toast.error(`Erro: ${e?.message}`);
+                            } finally {
+                              setSimPixLoading(false);
+                            }
                           }}
-                          className="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold py-2.5 rounded-xl flex items-center justify-center gap-2 transition text-[11px] cursor-pointer"
+                          disabled={simPixLoading}
+                          className="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition text-[11px] cursor-pointer disabled:opacity-50"
                         >
-                          👁️ Simular Visita ao Site
+                          {simPixLoading ? (
+                            <><Loader2 className="w-4 h-4 animate-spin" /> Gerando...</>
+                          ) : (
+                            <><CreditCard className="w-4 h-4" /> 1. Gerar Pix Real (R$ 6,22)</>
+                          )}
                         </button>
+                      )}
+
+                      {/* Step 2: Show QR Code */}
+                      {simPix && (
+                        <div className="space-y-3 border border-zinc-700/50 rounded-xl p-4 bg-zinc-900/50">
+                          <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider text-center">
+                            🧾 Pix Gerado via NexusPag
+                          </div>
+                          {simPix.qrCodeImage && (
+                            <div className="flex justify-center">
+                              <img
+                                src={
+                                  simPix.qrCodeImage.startsWith("data:")
+                                    ? simPix.qrCodeImage
+                                    : `data:image/png;base64,${simPix.qrCodeImage}`
+                                }
+                                alt="QR Code Pix"
+                                className="w-40 h-40 rounded-lg border-2 border-zinc-700 bg-white"
+                              />
+                            </div>
+                          )}
+                          {simPix.qrCode && (
+                            <div className="bg-zinc-900 rounded-lg p-2.5 text-[9px] break-all font-mono border border-zinc-800 select-all max-h-16 overflow-y-auto">
+                              {simPix.qrCode}
+                            </div>
+                          )}
+                          <div className="text-[9px] text-zinc-600 text-center font-mono">
+                            ID: {simPix.externalId}
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-2">
+                            <button
+                              onClick={() => {
+                                setSimPix(null);
+                                setSimPixLoading(false);
+                              }}
+                              className="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold py-2.5 rounded-xl text-[10px] transition cursor-pointer"
+                            >
+                              Cancelar
+                            </button>
+                            <button
+                              onClick={() => {
+                                if (typeof window !== "undefined" && window.fbq) {
+                                  window.fbq("track", "Purchase", { value: 6.22, currency: "BRL" });
+                                }
+                                if (typeof window !== "undefined" && window.ttq) {
+                                  window.ttq.track("CompletePayment", { value: 6.22, currency: "BRL" });
+                                  window.ttq.track("Purchase", { value: 6.22, currency: "BRL" });
+                                }
+                                toast.success("Pixel Purchase disparado! 🎯");
+                                setSimPix(null);
+                              }}
+                              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl text-[10px] transition cursor-pointer"
+                            >
+                              ✅ 2. Confirmar Pagamento
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="border-t border-zinc-800/30 pt-3 space-y-1.5">
+                        <p className="text-[9px] text-zinc-600 font-semibold uppercase tracking-wider mb-2">
+                          Ou simular logs manuais:
+                        </p>
                         <button
                           onClick={async () => {
                             const char = testCharacter;
@@ -886,48 +979,50 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                               toast.error(`Erro: ${e?.message}`);
                             }
                           }}
-                          className="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold py-2.5 rounded-xl flex items-center justify-center gap-2 transition text-[11px] cursor-pointer"
+                          className="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold py-2 rounded-xl flex items-center justify-center gap-2 transition text-[10px] cursor-pointer"
                         >
-                          <Camera className="w-3.5 h-3.5" /> Simular Geração de Foto
+                          <Camera className="w-3 h-3" /> Log: Geração
                         </button>
-                        <button
-                          onClick={async () => {
-                            const char = testCharacter;
-                            const ch = CHARACTERS[char];
-                            toast.info(`Simulando pedido PIX para ${ch.name}...`);
-                            try {
-                              await callSaveTestLog({
-                                data: { character: char, url: ch.example, status: "pending" },
-                              });
-                              toast.success(`Log de pedido PIX inserido! 💳`);
-                              fetchData();
-                            } catch (e: any) {
-                              toast.error(`Erro: ${e?.message}`);
-                            }
-                          }}
-                          className="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold py-2.5 rounded-xl flex items-center justify-center gap-2 transition text-[11px] cursor-pointer"
-                        >
-                          💳 Simular Pagamento (PIX)
-                        </button>
-                        <button
-                          onClick={async () => {
-                            const char = testCharacter;
-                            const ch = CHARACTERS[char];
-                            toast.info(`Simulando confirmação de pagamento...`);
-                            try {
-                              await callSaveTestLog({
-                                data: { character: char, url: ch.example, status: "paid" },
-                              });
-                              toast.success(`Log de pagamento confirmado! 🎉`);
-                              fetchData();
-                            } catch (e: any) {
-                              toast.error(`Erro: ${e?.message}`);
-                            }
-                          }}
-                          className="w-full bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white border border-emerald-500/20 font-bold py-2.5 rounded-xl flex items-center justify-center gap-2 transition text-[11px] cursor-pointer"
-                        >
-                          <Check className="w-3.5 h-3.5" /> Simular Webhook (Pago)
-                        </button>
+                        <div className="grid grid-cols-2 gap-1.5">
+                          <button
+                            onClick={async () => {
+                              const char = testCharacter;
+                              const ch = CHARACTERS[char];
+                              toast.info(`Simulando pedido PIX...`);
+                              try {
+                                await callSaveTestLog({
+                                  data: { character: char, url: ch.example, status: "pending" },
+                                });
+                                toast.success(`Log PIX inserido! 💳`);
+                                fetchData();
+                              } catch (e: any) {
+                                toast.error(`Erro: ${e?.message}`);
+                              }
+                            }}
+                            className="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold py-2 rounded-xl text-[10px] transition cursor-pointer"
+                          >
+                            💳 Log: PIX
+                          </button>
+                          <button
+                            onClick={async () => {
+                              const char = testCharacter;
+                              const ch = CHARACTERS[char];
+                              toast.info(`Simulando confirmação...`);
+                              try {
+                                await callSaveTestLog({
+                                  data: { character: char, url: ch.example, status: "paid" },
+                                });
+                                toast.success(`Log pago inserido! 🎉`);
+                                fetchData();
+                              } catch (e: any) {
+                                toast.error(`Erro: ${e?.message}`);
+                              }
+                            }}
+                            className="bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white border border-emerald-500/20 font-bold py-2 rounded-xl text-[10px] transition cursor-pointer"
+                          >
+                            <Check className="w-3 h-3" /> Log: Pago
+                          </button>
+                        </div>
                       </div>
                       <div className="pt-1 border-t border-zinc-800/30">
                         <button
