@@ -376,18 +376,12 @@ function Index() {
               )}
 
               {step === "generating" && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center bg-card text-foreground overflow-hidden">
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950 text-foreground overflow-hidden">
                   <style dangerouslySetInnerHTML={{__html: `
                     @keyframes scanner-sweep {
                       0% { transform: translateY(0); }
                       50% { transform: translateY(calc(100% - 6px)); }
                       100% { transform: translateY(0); }
-                    }
-                    .scanner-container {
-                      position: relative;
-                      width: 100%;
-                      height: 100%;
-                      overflow: hidden;
                     }
                     .scanner-line {
                       position: absolute;
@@ -416,7 +410,7 @@ function Index() {
                   `}} />
 
                   {/* BLURRED BACKGROUND PREVIEW WITH SCANNER */}
-                  <div className="absolute inset-0 scanner-container">
+                  <div className="absolute inset-0 overflow-hidden">
                     {originalPreview ? (
                       <img 
                         src={originalPreview} 
@@ -424,27 +418,27 @@ function Index() {
                         className="w-full h-full object-cover blur-[5px] brightness-[0.4]" 
                       />
                     ) : (
-                      <div className="w-full h-full bg-slate-950/80" />
+                      <div className="w-full h-full bg-slate-950" />
                     )}
                     <div className="scanner-line" />
                   </div>
 
                   {/* HIGH-TECH FLOATING GRID/UI ELEMENTS */}
                   <div className="absolute inset-0 pointer-events-none border border-white/10 rounded-2xl z-10 flex flex-col justify-between p-4">
-                    <div className="flex justify-between items-center text-[10px] text-emerald-400 font-mono tracking-wider bg-black/40 backdrop-blur px-2.5 py-1 rounded-full border border-emerald-500/20 self-start">
+                    <div className="flex justify-between items-center text-[10px] text-emerald-400 font-mono tracking-wider bg-black/45 backdrop-blur px-2.5 py-1 rounded-full border border-emerald-500/20 self-start">
                       <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping mr-2" />
                       PROCESSANDO FACE
                     </div>
                   </div>
 
                   {/* CENTRAL SCANNER HUD */}
-                  <div className="relative z-30 flex flex-col items-center gap-3 bg-black/55 backdrop-blur-md border border-white/10 rounded-2xl p-5 text-center shadow-lg">
+                  <div className="relative z-30 flex flex-col items-center gap-3 bg-black/75 backdrop-blur-md border border-white/10 rounded-2xl p-5 text-center shadow-2xl max-w-[220px] w-full animate-in zoom-in-95 duration-300">
                     <div className="relative w-16 h-16 flex items-center justify-center">
                       <div className="absolute inset-0 rounded-full border-4 border-emerald-500/20 border-t-emerald-500 animate-spin" />
                       <Loader2 className="w-8 h-8 animate-spin text-yellow-400 opacity-80 absolute" />
                     </div>
                     <div className="font-mono text-[9px] text-emerald-400 uppercase tracking-widest font-bold animate-pulse">Alinhando Traços IA</div>
-                    <div className="font-display text-3xl text-white font-extrabold leading-none">
+                    <div className="font-display text-4xl text-white font-extrabold leading-none tracking-tight">
                       {progress}%
                     </div>
                   </div>
@@ -489,6 +483,36 @@ function Index() {
                       ⚡ Testar/Simular Checkout Rápido
                     </button>
                   )}
+                </div>
+              )}
+              {step === "generating" && (
+                <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                  {/* Linear Progress Bar */}
+                  <div className="w-full bg-slate-200 dark:bg-slate-800 rounded-full h-3.5 overflow-hidden border border-border/40 shadow-inner">
+                    <div
+                      className="bg-gradient-to-r from-emerald-600 via-emerald-500 to-yellow-400 h-full rounded-full transition-all duration-300 shadow-[0_0_10px_rgba(16,185,129,0.5)]"
+                      style={{ width: `${progress}%` }}
+                    />
+                  </div>
+
+                  {/* Narrative Stepper Text */}
+                  <div className="bg-card border border-border/80 rounded-2xl p-4.5 text-center shadow-md relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-1.5 h-full bg-emerald-500" />
+                    <p className="text-sm font-bold text-foreground transition-all duration-300 flex items-center justify-center gap-2">
+                      <Loader2 className="w-4 h-4 animate-spin text-[oklch(0.52_0.16_145)] flex-shrink-0" />
+                      <span>{getGenerationLogs(c.short)[logIndex]}</span>
+                    </p>
+                  </div>
+
+                  {/* Rotating Retention Tip */}
+                  <div className="text-center bg-yellow-500/5 dark:bg-yellow-500/10 border border-yellow-500/20 rounded-2xl p-4 transition-all duration-500">
+                    <div className="text-[10px] text-yellow-600 dark:text-yellow-400 font-extrabold uppercase tracking-wider mb-1 flex items-center justify-center gap-1">
+                      <Sparkles className="w-3.5 h-3.5" /> DICA DO DIA
+                    </div>
+                    <p className="text-xs text-muted-foreground leading-relaxed font-semibold transition-all duration-500">
+                      "{RETENTION_TIPS[tipIndex]}"
+                    </p>
+                  </div>
                 </div>
               )}
               {step === "preview" && (
