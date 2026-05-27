@@ -794,7 +794,6 @@ function Index() {
           total={total}
           onClose={() => setShowPayment(false)}
           onPaid={handlePaid}
-          isDevMode={isDevMode}
           generatedUrl={generatedUrl}
         />
       )}
@@ -802,7 +801,6 @@ function Index() {
         <UpsellModal 
           type="darkhorse"
           characterKey={character} 
-          isDevMode={isDevMode} 
           onClose={() => setActiveUpsell("grupo")} 
         />
       )}
@@ -810,60 +808,11 @@ function Index() {
         <UpsellModal 
           type="grupo"
           characterKey={character} 
-          isDevMode={isDevMode} 
           onClose={() => {
             setActiveUpsell(null);
             setShowCrossSellModal(true);
           }} 
         />
-      )}
-      {isDevMode && (step === "preview" || step === "paid") && (
-        <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 mt-4 space-y-2 text-xs">
-          <div className="font-bold text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
-            <span>🛠️ PAINEL DO DESENVOLVEDOR</span>
-          </div>
-          <div className="flex gap-2 flex-wrap">
-            {step === "preview" && (
-              <button
-                onClick={() => {
-                  setStep("paid");
-                  toast.success("Foto liberada via Painel Dev! 🎉");
-                }}
-                className="bg-amber-500 hover:bg-amber-600 text-white font-bold px-3 py-1.5 rounded-lg transition"
-              >
-                🔓 Liberar Foto Grátis
-              </button>
-            )}
-            <button
-              onClick={() => {
-                if (generatedUrl) {
-                  navigator.clipboard.writeText(generatedUrl);
-                  toast.success("URL copiada!");
-                }
-              }}
-              className="bg-muted hover:bg-muted/80 text-foreground font-semibold px-3 py-1.5 rounded-lg transition border border-border"
-            >
-              📋 Copiar URL
-            </button>
-            <button
-              onClick={() => {
-                if (isAdminLoggedIn) {
-                  setShowAdminPanel(true);
-                } else {
-                  setShowAdminLogin(true);
-                }
-              }}
-              className="bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold px-3 py-1.5 rounded-lg transition border border-slate-700"
-            >
-              ⚙️ Dashboard Admin (Logs)
-            </button>
-          </div>
-          {generatedUrl && (
-            <div className="text-[10px] text-muted-foreground break-all select-all font-mono">
-              <strong>URL:</strong> {generatedUrl}
-            </div>
-          )}
-        </div>
       )}
       {showCrossSellModal && (
         <CrossSellModal
@@ -873,28 +822,6 @@ function Index() {
             reset();
             setPromoPrice(4.99);
             toast.success(`Personagem alterado para ${CHARACTERS[charKey].short}! Desconto de Pós-Venda Ativo: R$ 4,99! 🇧🇷`);
-          }}
-        />
-      )}
-      {showAdminLogin && (
-        <AdminLoginModal
-          onClose={() => setShowAdminLogin(false)}
-          onSuccess={() => {
-            localStorage.setItem("admin_logged_in", "true");
-            setShowAdminLogin(false);
-            setIsAdminLoggedIn(true);
-            setShowAdminPanel(true);
-          }}
-        />
-      )}
-      {showAdminPanel && isAdminLoggedIn && (
-        <DevDashboardModal
-          onClose={() => setShowAdminPanel(false)}
-          onLogout={() => {
-            localStorage.removeItem("admin_logged_in");
-            setIsAdminLoggedIn(false);
-            setShowAdminPanel(false);
-            toast.success("Sessão admin encerrada. Até logo! 👋");
           }}
         />
       )}
