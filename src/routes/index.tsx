@@ -614,21 +614,25 @@ function Index() {
               )}
 
               {(step === "preview" || step === "paid") && generatedUrl && (
-                <>
+                <div 
+                  className="w-full h-full select-none"
+                  onContextMenu={(e) => e.preventDefault()}
+                >
                   <img
                     src={generatedUrl}
                     alt={`Sua foto com ${c.name}`}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover select-none pointer-events-none"
                     width={1024}
                     height={1024}
+                    onDragStart={(e) => e.preventDefault()}
                   />
                   {step === "preview" && <div className="watermark-overlay" />}
                   {step === "paid" && (
-                    <div className="absolute top-3 right-3 bg-[oklch(0.52_0.16_145)] text-white px-3 py-1 rounded-full text-[11px] uppercase tracking-wider font-bold flex items-center gap-1">
+                    <div className="absolute top-3 right-3 bg-[oklch(0.52_0.16_145)] text-white px-3 py-1 rounded-full text-[11px] uppercase tracking-wider font-bold flex items-center gap-1 select-none">
                       <Check className="w-3 h-3" /> Liberada
                     </div>
                   )}
-                </>
+                </div>
               )}
             </div>
 

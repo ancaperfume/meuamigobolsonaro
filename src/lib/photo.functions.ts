@@ -37,25 +37,67 @@ function getClientIP(request: Request): string {
   );
 }
 
+async function uploadToSupabaseStorage(temporaryUrl: string, character: string): Promise<string> {
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    if (!supabaseAdmin || typeof supabaseAdmin.storage === "undefined") {
+      console.warn("Supabase Admin Storage is not configured, using temporary URL");
+      return temporaryUrl;
+    }
+
+    // 1. Fetch the image from the temporary URL
+    const res = await fetch(temporaryUrl);
+    if (!res.ok) {
+      throw new Error(`Failed to fetch image from OpenRouter (status ${res.status})`);
+    }
+    const buffer = await res.arrayBuffer();
+
+    // 2. Ensure the "photos" bucket exists and is public
+    try {
+      await supabaseAdmin.storage.createBucket("photos", {
+        public: true,
+        allowedMimeTypes: ["image/png", "image/jpeg", "image/webp"],
+      });
+    } catch (bucketError) {
+      // Ignore: bucket might already exist
+    }
+
+    // 3. Upload the image
+    const fileExt = "png";
+    const fileName = `${character}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${fileExt}`;
+    
+    const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
+      .from("photos")
+      .upload(fileName, buffer, {
+        contentType: "image/png",
+        upsert: true,
+      });
+
+    if (uploadError) {
+      throw uploadError;
+    }
+
+    // 4. Get the public URL
+    const { data: { publicUrl } } = supabaseAdmin.storage
+      .from("photos")
+      .getPublicUrl(fileName);
+
+    console.log("Successfully uploaded generated photo to permanent storage:", publicUrl);
+    return publicUrl;
+  } catch (error) {
+    console.error("Failed to upload image to Supabase Storage, using temporary URL:", error);
+    return temporaryUrl;
+  }
+}
+
 export const generatePhoto = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => inputSchema.parse(data))
   .handler(async ({ data }) => {
     const request = getRequest();
     const ip = getClientIP(request);
 
-    // Obfuscated OpenRouter key to prevent GitHub secret scanner block
-    const keyParts = [
-      "sk-or-",
-      "v1-2905ccc7",
-      "d3f0c660af",
-      "4fa996606a",
-      "b741a17600",
-      "55e2368afe",
-      "781e568f97",
-      "37a4b3",
-    ];
-    const apiKey = process.env.OPENROUTER_API_KEY || keyParts.join("");
-    if (!apiKey) throw new Error("A chave OPENROUTER_API_KEY não foi configurada.");
+    const apiKey = process.env.OPENROUTER_API_KEY;
+    if (!apiKey) throw new Error("A chave OPENROUTER_API_KEY não foi configurada nas variáveis de ambiente do servidor.");
 
     const character = characterPrompts[data.character];
     const prompt = `CRITICAL IDENTITY PRESERVATION RULES:
@@ -128,17 +170,20 @@ SCENE COMPOSITION & STYLE:
 
     const imgUrl = images[0];
 
+    // Upload to permanent Supabase storage
+    const permanentUrl = await uploadToSupabaseStorage(imgUrl, data.character);
+
     let logSaved = false;
     let logError: string | null = null;
     try {
-      await saveGenerationToLog(imgUrl, data.character, ip);
+      await saveGenerationToLog(permanentUrl, data.character, ip);
       logSaved = true;
     } catch (e: any) {
       logError = e?.message ?? "Erro ao salvar log";
       console.error("Failed to save generation log", e);
     }
 
-    return { imageUrl: imgUrl, logSaved, logError };
+    return { imageUrl: permanentUrl, logSaved, logError };
   });
 
 export const getGenerationsLog = createServerFn({ method: "GET" }).handler(async () => {

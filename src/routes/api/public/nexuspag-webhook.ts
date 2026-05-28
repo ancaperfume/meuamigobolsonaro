@@ -37,7 +37,54 @@ export const Route = createFileRoute("/api/public/nexuspag-webhook")({
           return new Response("Invalid JSON", { status: 400 });
         }
 
-        console.log("NexusPag webhook received", JSON.stringify(payload));
+        console.log("NexusPag webhook received:", JSON.stringify(payload));
+
+        // 1. Safely extract external_id and payment status from the webhook payload (defensively checking nested keys)
+        const nestedData = payload.transaction ?? payload.data ?? payload.pix ?? payload;
+        const externalId: string | undefined = 
+          nestedData.external_id ?? 
+          nestedData.externalId ?? 
+          payload.external_id ?? 
+          payload.externalId;
+          
+        const status: string | undefined = nestedData.status ?? payload.status;
+
+        if (externalId && status) {
+          const isPaid =
+            status === "paid" ||
+            status === "confirmed" ||
+            status === "completed" ||
+            status === "approved" ||
+            status === "finished";
+
+          if (isPaid) {
+            const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+            if (supabaseAdmin) {
+              try {
+                const { error: updateError } = await supabaseAdmin
+                  .from("orders")
+                  .update({
+                    status: "paid",
+                    paid_at: new Date().toISOString(),
+                    nexuspag_id: nestedData.id ?? payload.id ?? null,
+                  })
+                  .eq("external_id", externalId);
+
+                if (updateError) {
+                  console.error(`Supabase update error for webhook order ${externalId}:`, updateError);
+                } else {
+                  console.log(`Database synced: Order ${externalId} marked as paid via webhook confirmation.`);
+                }
+              } catch (dbErr) {
+                console.error(`Failed to handle DB sync in webhook for order ${externalId}:`, dbErr);
+              }
+            }
+          } else {
+            console.log(`Webhook order ${externalId} status is pending/other: ${status}`);
+          }
+        } else {
+          console.warn("Could not extract external_id or status from webhook payload", jsonBody => JSON.stringify(payload));
+        }
 
         return new Response("ok", { status: 200 });
       },
