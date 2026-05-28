@@ -236,8 +236,19 @@ function Index() {
   const [downsellOffered, setDownsellOffered] = useState(false);
   const [showDownsell, setShowDownsell] = useState(false);
   const [isDownsellActive, setIsDownsellActive] = useState(false);
+  const [showLideresCheckout, setShowLideresCheckout] = useState(false);
+  const [isLideresDownsellActive, setIsLideresDownsellActive] = useState(false);
+  const [lideresDownsellOffered, setLideresDownsellOffered] = useState(false);
+  const [showLideresDownsellModal, setShowLideresDownsellModal] = useState(false);
+  const [unlockedLideres, setUnlockedLideres] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const callGenerate = useServerFn(generatePhoto);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setUnlockedLideres(localStorage.getItem("unlocked_lideres_mundiais") === "true");
+    }
+  }, []);
 
   // Preload all character examples to make switching instant
   useEffect(() => {
@@ -327,6 +338,10 @@ function Index() {
     setDownsellOffered(false);
     setShowDownsell(false);
     setIsDownsellActive(false);
+    setShowLideresCheckout(false);
+    setIsLideresDownsellActive(false);
+    setLideresDownsellOffered(false);
+    setShowLideresDownsellModal(false);
   };
 
   const handlePaymentClose = useCallback(() => {
@@ -343,6 +358,40 @@ function Index() {
     setShowPayment(true);
     toast.success("Desconto patriota de resgate ativado! 🇧🇷");
   }, []);
+
+  const handleOpenLideresCheckout = useCallback(() => {
+    setShowLideresCheckout(true);
+  }, []);
+
+  const handleLideresCheckoutClose = useCallback(() => {
+    setShowLideresCheckout(false);
+    if (!lideresDownsellOffered && !isLideresDownsellActive) {
+      setLideresDownsellOffered(true);
+      setShowLideresDownsellModal(true);
+    }
+  }, [lideresDownsellOffered, isLideresDownsellActive]);
+
+  const handleLideresDownsellAccept = useCallback(() => {
+    setShowLideresDownsellModal(false);
+    setIsLideresDownsellActive(true);
+    setShowLideresCheckout(true);
+    toast.success("Desconto VIP de resgate ativado! 🇧🇷");
+  }, []);
+
+  const handleLideresPaid = useCallback(() => {
+    setShowLideresCheckout(false);
+    localStorage.setItem("unlocked_lideres_mundiais", "true");
+    setUnlockedLideres(true);
+    toast.success("Pacote Premium Líderes Mundiais desbloqueado com sucesso! 🎉");
+    const price = isLideresDownsellActive ? 9.90 : 27.00;
+    if (typeof window !== "undefined" && window.fbq) {
+      window.fbq("track", "Purchase", { value: price, currency: "BRL" });
+    }
+    if (typeof window !== "undefined" && window.ttq) {
+      window.ttq.track("CompletePayment", { value: price, currency: "BRL" });
+      window.ttq.track("Purchase", { value: price, currency: "BRL" });
+    }
+  }, [isLideresDownsellActive]);
 
   const handlePaid = useCallback(() => {
     setShowPayment(false);
@@ -605,7 +654,13 @@ function Index() {
               {step === "preview" && (
                 <div className="space-y-3">
                   <button
-                    onClick={() => setShowPayment(true)}
+                    onClick={() => {
+                      if (CHARACTERS[character].isPremium && unlockedLideres) {
+                        handlePaid();
+                      } else {
+                        setShowPayment(true);
+                      }
+                    }}
                     className="w-full bg-gradient-to-r from-emerald-600 via-emerald-500 to-emerald-600 hover:brightness-105 active:scale-[0.99] text-white font-extrabold py-4 rounded-xl flex items-center justify-center gap-2 transition-all duration-300 shadow-[0_10px_25px_rgba(16,185,129,0.35)] animate-pulse-slow cursor-pointer"
                   >
                     <Lock className="w-5 h-5 animate-bounce-slow" />
@@ -743,52 +798,120 @@ function Index() {
                         </div>
                       )}
 
-                      {/* PÓS-COMPRA: OUTROS MEMBROS CROSS-SELL */}
-                      <div className="bg-muted/65 border border-border rounded-2xl p-5 space-y-4 text-center">
-                        <div className="text-[10px] uppercase tracking-widest text-[oklch(0.52_0.16_145)] font-extrabold">
-                          🎉 Oferta de Cliente Especial!
-                        </div>
-                        <h3 className="font-display text-base font-bold text-foreground leading-tight">
-                          Gostou? Complete seu álbum com outros ídolos!
-                        </h3>
-                        <p className="text-[11px] text-muted-foreground leading-relaxed">
-                          Você já tem sua foto com {c.short}. Tire uma foto com os outros membros
-                          por um preço super especial!
-                        </p>
+                      {/* PÓS-COMPRA: PREMIUM LÍDERES MUNDIAIS CROSS-SELL */}
+                      {!unlockedLideres ? (
+                        <div className="relative overflow-hidden bg-gradient-to-br from-zinc-950 via-slate-900 to-zinc-950 border-3 border-yellow-400 rounded-3xl p-5 md:p-6 text-center shadow-[0_15px_35px_rgba(254,223,0,0.15)] text-white space-y-5 animate-in fade-in duration-700">
+                          {/* Dourado Glow decorativo */}
+                          <div className="absolute -top-12 -left-12 w-28 h-28 rounded-full bg-yellow-400/25 blur-3xl" />
+                          <div className="absolute -bottom-12 -right-12 w-28 h-28 rounded-full bg-emerald-500/20 blur-3xl" />
 
-                        <div className="grid grid-cols-2 gap-2 pt-1.5">
-                          {Object.keys(CHARACTERS).map((key) => {
-                            const charKey = key as CharKey;
-                            if (charKey === character) return null;
-                            const ch = CHARACTERS[charKey];
-                            return (
-                              <button
-                                key={charKey}
-                                onClick={() => {
-                                  setCharacter(charKey);
-                                  reset();
-                                  toast.success(
-                                    `Personagem alterado para ${ch.short}! Envie sua selfie para começar!`,
-                                  );
-                                }}
-                                className="bg-card hover:bg-[oklch(0.88_0.19_95)]/20 border border-border hover:border-[oklch(0.52_0.16_145)]/40 rounded-xl p-3 text-center transition flex flex-col items-center gap-1.5 group cursor-pointer"
-                              >
-                                <img
-                                  src={ch.example}
-                                  alt={ch.name}
-                                  className="w-10 h-10 rounded-full object-cover border border-border group-hover:border-[oklch(0.52_0.16_145)]/50 transition"
-                                />
-                                <div className="text-[11px] font-bold text-foreground leading-tight">
-                                  Foto com {ch.short}
-                                </div>
-                                <span className="text-[9px] text-[oklch(0.52_0.16_145)] font-bold">
-                                  Criar Foto →
-                                </span>
-                              </button>
-                            );
-                          })}
+                          <div className="relative z-10 space-y-2">
+                            <span className="inline-flex items-center gap-1.5 bg-yellow-400 text-slate-950 text-[9px] font-black uppercase px-3 py-1 rounded-full tracking-wider animate-pulse">
+                              ⚡ OFERTA EXCLUSIVA DE PATRIOTA VIP
+                            </span>
+                            <h3 className="font-display text-2xl md:text-3xl font-black leading-tight text-yellow-400">
+                              Desbloqueie Donald Trump & Javier Milei!
+                            </h3>
+                            <p className="text-[11px] text-slate-300 leading-relaxed max-w-sm mx-auto">
+                              Complete seu álbum de fotos com os maiores líderes da direita mundial. Crie selfies realistas lado a lado com Trump e Milei com <strong>gerações ILIMITADAS</strong> para sempre!
+                            </p>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-4 max-w-sm mx-auto pt-2 relative z-10">
+                            {/* Trump Card */}
+                            <div className="bg-white/5 border border-white/10 rounded-2xl p-3 flex flex-col items-center gap-2 hover:border-yellow-400/30 transition">
+                              <img
+                                src={CHARACTERS.trump.example}
+                                alt="Donald Trump"
+                                className="w-14 h-14 rounded-full object-cover border-2 border-yellow-400/50 shadow-md"
+                              />
+                              <div className="text-xs font-black tracking-wide">Donald Trump</div>
+                              <span className="text-[8px] bg-red-600/30 text-red-400 px-2 py-0.5 rounded-full font-bold uppercase">🇺🇸 USA</span>
+                            </div>
+
+                            {/* Milei Card */}
+                            <div className="bg-white/5 border border-white/10 rounded-2xl p-3 flex flex-col items-center gap-2 hover:border-yellow-400/30 transition">
+                              <img
+                                src={CHARACTERS.milei.example}
+                                alt="Javier Milei"
+                                className="w-14 h-14 rounded-full object-cover border-2 border-yellow-400/50 shadow-md"
+                              />
+                              <div className="text-xs font-black tracking-wide">Javier Milei</div>
+                              <span className="text-[8px] bg-blue-600/30 text-blue-400 px-2 py-0.5 rounded-full font-bold uppercase">🇦🇷 ARG</span>
+                            </div>
+                          </div>
+
+                          <div className="space-y-3 relative z-10 pt-2">
+                            <div className="flex items-center justify-center gap-3">
+                              <span className="text-xs text-slate-400 line-through font-semibold">De R$ 49,90</span>
+                              <span className="text-xl font-black text-yellow-400 bg-yellow-400/10 px-3 py-1 rounded-lg border border-yellow-400/20">
+                                Por R$ 27,00
+                              </span>
+                            </div>
+
+                            <button
+                              onClick={handleOpenLideresCheckout}
+                              className="w-full bg-gradient-to-r from-yellow-500 via-amber-400 to-yellow-500 hover:brightness-105 active:scale-[0.99] text-slate-950 font-black py-4.5 rounded-xl flex items-center justify-center gap-2 transition-all duration-300 shadow-[0_10px_25px_rgba(245,158,11,0.35)] animate-pulse-slow cursor-pointer text-xs md:text-sm uppercase tracking-wider"
+                            >
+                              <Sparkles className="w-4 h-4 animate-bounce-slow" />
+                              Desbloquear Trump & Milei Ilimitados ⚡
+                            </button>
+
+                            <p className="text-[9px] text-slate-400">
+                              🔒 Compra única. Sem assinaturas. Acesso vitalício imediato.
+                            </p>
+                          </div>
                         </div>
-                      </div>
+                      ) : (
+                        <div className="bg-emerald-500/10 border-2 border-emerald-500/30 rounded-3xl p-5 text-center text-emerald-800 dark:text-emerald-400 font-semibold space-y-4 shadow-[0_10px_30px_rgba(16,185,129,0.1)]">
+                          <div className="space-y-1">
+                            <div className="text-sm font-black text-emerald-500 flex items-center justify-center gap-1.5 animate-pulse">
+                              🎉 PARABÉNS, PATRIOTA!
+                            </div>
+                            <p className="text-[11px] font-medium text-slate-300 leading-relaxed max-w-sm mx-auto">
+                              Seu Pacote Premium Líderes Mundiais está 100% ativo! Escolha abaixo o líder com quem você quer criar sua foto agora:
+                            </p>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-3 max-w-sm mx-auto">
+                            {/* Select Trump Button */}
+                            <button
+                              onClick={() => {
+                                setCharacter("trump");
+                                reset();
+                                toast.success("Alterado para Donald Trump! Envie sua selfie para começar! 🇺🇸");
+                              }}
+                              className="bg-emerald-950/20 hover:bg-emerald-950/40 border border-emerald-500/30 hover:border-yellow-400/50 rounded-2xl p-3 flex flex-col items-center gap-2 transition cursor-pointer group"
+                            >
+                              <img
+                                src={CHARACTERS.trump.example}
+                                alt="Donald Trump"
+                                className="w-12 h-12 rounded-full object-cover border-2 border-emerald-500/50 group-hover:scale-105 transition"
+                              />
+                              <div className="text-[11px] font-black text-slate-200">Donald Trump</div>
+                              <span className="text-[8px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full font-bold uppercase">Gerar Foto →</span>
+                            </button>
+
+                            {/* Select Milei Button */}
+                            <button
+                              onClick={() => {
+                                setCharacter("milei");
+                                reset();
+                                toast.success("Alterado para Javier Milei! Envie sua selfie para começar! 🇦🇷");
+                              }}
+                              className="bg-emerald-950/20 hover:bg-emerald-950/40 border border-emerald-500/30 hover:border-yellow-400/50 rounded-2xl p-3 flex flex-col items-center gap-2 transition cursor-pointer group"
+                            >
+                              <img
+                                src={CHARACTERS.milei.example}
+                                alt="Javier Milei"
+                                className="w-12 h-12 rounded-full object-cover border-2 border-emerald-500/50 group-hover:scale-105 transition"
+                              />
+                              <div className="text-[11px] font-black text-slate-200">Javier Milei</div>
+                              <span className="text-[8px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full font-bold uppercase">Gerar Foto →</span>
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
 
@@ -886,7 +1009,13 @@ function Index() {
           {step === "preview" && (
             <div className="w-full flex gap-2">
               <button
-                onClick={() => setShowPayment(true)}
+                onClick={() => {
+                  if (CHARACTERS[character].isPremium && localStorage.getItem("unlocked_lideres_mundiais") === "true") {
+                    handlePaid();
+                  } else {
+                    setShowPayment(true);
+                  }
+                }}
                 className="flex-1 bg-gradient-to-r from-emerald-600 via-emerald-500 to-emerald-600 text-white font-extrabold py-4 rounded-xl flex items-center justify-center gap-2 transition-all duration-300 shadow-[0_10px_25px_rgba(16,185,129,0.35)] animate-pulse-slow cursor-pointer"
               >
                 <Lock className="w-5 h-5 animate-bounce-slow" />
@@ -942,6 +1071,24 @@ function Index() {
           price={CHARACTERS[character].isPremium ? 4.90 : 3.90}
           onClose={() => setShowDownsell(false)}
           onAccept={handleDownsellAccept}
+        />
+      )}
+      {showLideresCheckout && (
+        <PaymentModal
+          character="Trump & Milei"
+          characterKey="trump"
+          bumps={{ oracoes: false, guia: false }}
+          setBumps={() => {}}
+          total={isLideresDownsellActive ? 9.90 : 27.00}
+          onClose={handleLideresCheckoutClose}
+          onPaid={handleLideresPaid}
+          generatedUrl={null}
+        />
+      )}
+      {showLideresDownsellModal && (
+        <LideresDownsellModal
+          onClose={() => setShowLideresDownsellModal(false)}
+          onAccept={handleLideresDownsellAccept}
         />
       )}
       {activeUpsell === "darkhorse" && (
@@ -2575,6 +2722,62 @@ function DownsellModal({
             className="text-xs text-muted-foreground hover:text-foreground font-semibold underline cursor-pointer"
           >
             Não, quero perder minha foto para sempre
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function LideresDownsellModal({
+  onClose,
+  onAccept,
+}: {
+  onClose: () => void;
+  onAccept: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+      <div className="bg-background rounded-3xl max-w-md w-full my-8 shadow-[0_20px_50px_rgba(254,223,0,0.25)] border-2 border-yellow-400 overflow-hidden flex flex-col animate-in scale-in duration-300">
+        <div className="bg-gradient-to-br from-zinc-950 via-slate-900 to-zinc-950 text-white px-6 py-7 text-center relative border-b border-yellow-400/20">
+          <div className="inline-flex items-center gap-1.5 bg-yellow-400 text-slate-950 text-[10px] font-extrabold uppercase px-3 py-1 rounded-full tracking-wider mb-2 animate-bounce">
+            🇺🇸 DESCONTO DE RESGATE CONSERVADOR 🇦🇷
+          </div>
+          <h2 className="font-display text-2xl md:text-3xl font-black leading-tight text-yellow-400">
+            Última chance de completar seu álbum!
+          </h2>
+        </div>
+
+        <div className="p-6 space-y-5 text-center">
+          <p className="text-xs text-muted-foreground leading-relaxed font-semibold">
+            Não perca a chance única de desbloquear Donald Trump & Javier Milei ilimitados! Liberamos o super desconto de resgate de patriota para você garantir o seu pacote VIP.
+          </p>
+
+          <div className="bg-yellow-400/5 rounded-2xl p-4 border border-yellow-400/10 flex flex-col items-center">
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold leading-none mb-1">
+              De R$ 27,00 por apenas:
+            </span>
+            <span className="font-display text-5xl text-yellow-500 font-black animate-pulse">
+              R$ 9,90
+            </span>
+            <span className="text-[10px] text-muted-foreground font-semibold mt-1">
+              Acesso vitalício ilimitado com Trump e Milei
+            </span>
+          </div>
+
+          <button
+            onClick={onAccept}
+            className="w-full bg-gradient-to-r from-yellow-500 via-amber-400 to-yellow-500 hover:brightness-105 active:scale-[0.99] text-amber-950 font-black py-4.5 rounded-xl flex items-center justify-center gap-2 transition-all shadow-[0_10px_25px_rgba(245,158,11,0.35)] animate-pulse-slow cursor-pointer text-sm"
+          >
+            <Sparkles className="w-4 h-4 animate-bounce-slow" />
+            SIM, ACEITO O DESCONTO POR R$ 9,90! ⚡
+          </button>
+
+          <button
+            onClick={onClose}
+            className="text-xs text-muted-foreground hover:text-foreground font-semibold underline cursor-pointer"
+          >
+            Não, obrigado. Recusar e prosseguir
           </button>
         </div>
       </div>
