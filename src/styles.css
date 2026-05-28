@@ -103,3 +103,21 @@
 }
 
 .font-display { font-family: var(--font-display); }
+
+@utility animate-pulse-slow {
+  animation: pulse-slow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@utility animate-bounce-slow {
+  animation: bounce-slow 2.5s infinite;
+}
+
+@keyframes pulse-slow {
+  0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 10px 25px rgba(16, 185, 129, 0.35); }
+  50% { opacity: 0.92; transform: scale(1.025); box-shadow: 0 15px 35px rgba(16, 185, 129, 0.55); }
+}
+
+@keyframes bounce-slow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}

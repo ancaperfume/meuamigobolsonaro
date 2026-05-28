@@ -11,7 +11,7 @@ import {
 const inputSchema = z.object({
   imageBase64: z.string().min(100),
   mimeType: z.string().min(3),
-  character: z.enum(["jair", "flavio", "michelle", "nikolas"]),
+  character: z.enum(["jair", "flavio", "michelle", "nikolas", "trump", "milei"]),
 });
 
 const characterPrompts: Record<string, string> = {
@@ -22,6 +22,10 @@ const characterPrompts: Record<string, string> = {
     "Michelle Bolsonaro, the elegant former Brazilian first lady in her early 40s. She has styled shoulder-length light brown hair with blonde highlights, refined and soft facial features, a gentle elegant smile, wearing a classic modest pastel-colored dress or elegant business blazer.",
   nikolas:
     "Nikolas Ferreira, the young Brazilian politician in his late 20s. He has a very youthful face, short styled dark hair, a neatly trimmed thin beard (stubble), wearing rectangular dark-rimmed glasses, a warm and friendly energetic smile, wearing a neat modern dark polo shirt.",
+  trump:
+    "Donald Trump, the famous American leader and former president, a man in his late 70s with combed golden-blonde hair, a confident warm smile, wearing a classic dark navy blue suit with a clean white dress shirt and a bright red tie, looking directly at the camera.",
+  milei:
+    "Javier Milei, the Argentinian leader in his early 50s, with long messy shaggy dark brown hair, prominent and thick sideburns, blue eyes, a confident energetic smile, wearing a black leather jacket over a black shirt, looking directly at the camera.",
 };
 
 function getClientIP(request: Request): string {
@@ -144,7 +148,7 @@ export const getGenerationsLog = createServerFn({ method: "GET" }).handler(async
 });
 
 const testLogSchema = z.object({
-  character: z.enum(["jair", "flavio", "michelle", "nikolas"]),
+  character: z.enum(["jair", "flavio", "michelle", "nikolas", "trump", "milei"]),
   url: z.string().min(1),
   status: z.string().optional(),
 });

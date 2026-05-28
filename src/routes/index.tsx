@@ -40,6 +40,8 @@ import exampleJair from "@/assets/example-jair.jpg";
 import exampleFlavio from "@/assets/example-flavio.jpg";
 import exampleMichelle from "@/assets/example-michelle.jpg";
 import exampleNikolas from "@/assets/example-nikolas.jpg";
+import exampleTrump from "@/assets/example-trump.png";
+import exampleMilei from "@/assets/example-milei.png";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -57,7 +59,7 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-type CharKey = "jair" | "flavio" | "michelle" | "nikolas";
+type CharKey = "jair" | "flavio" | "michelle" | "nikolas" | "trump" | "milei";
 
 const CHARACTERS: Record<
   CharKey,
@@ -69,6 +71,7 @@ const CHARACTERS: Record<
     sub: string;
     example: string;
     accent: string;
+    isPremium?: boolean;
   }
 > = {
   jair: {
@@ -107,6 +110,26 @@ const CHARACTERS: Record<
     example: exampleNikolas,
     accent: "verde",
   },
+  trump: {
+    name: "Donald Trump",
+    short: "Trump",
+    tagline: "O Presidente",
+    headline: "Uma foto com Donald Trump.",
+    sub: "Coloque-se ao lado do maior líder conservador do planeta em altíssima definição.",
+    example: exampleTrump,
+    accent: "dourado",
+    isPremium: true,
+  },
+  milei: {
+    name: "Javier Milei",
+    short: "Milei",
+    tagline: "El Peluca",
+    headline: "¡Viva la libertad, carajo!",
+    sub: "Uma selfie épica com o presidente libertário da Argentina e sua icônica jaqueta de couro.",
+    example: exampleMilei,
+    accent: "dourado",
+    isPremium: true,
+  },
 };
 
 type Step = "idle" | "generating" | "preview" | "paid";
@@ -130,13 +153,16 @@ const RETENTION_TIPS = [
   "⚡ Sabia que? Nossa IA analisa mais de 120 pontos faciais para garantir o máximo realismo na montagem.",
 ];
 
-const getGenerationLogs = (charShort: string) => [
-  "🔍 Analisando as feições e iluminação do seu rosto...",
-  "🎨 Ajustando as cores e o contraste com inteligência artificial...",
-  `🇧🇷 Posicionando você lado a lado com o ${charShort}...`,
-  "⚡ Renderizando imagem em alta definição e removendo ruídos...",
-  "✨ Dando os últimos retoques de realismo... Quase pronto!",
-];
+const getGenerationLogs = (charShort: string) => {
+  const flag = charShort === "Trump" ? "🇺🇸" : charShort === "Milei" ? "🇦🇷" : "🇧🇷";
+  return [
+    "🔍 Analisando as feições e iluminação do seu rosto...",
+    "🎨 Ajustando as cores e o contraste com inteligência artificial...",
+    `${flag} Posicionando você lado a lado com o ${charShort}...`,
+    "⚡ Renderizando imagem em alta definição e removendo ruídos...",
+    "✨ Dando os últimos retoques de realismo... Quase pronto!",
+  ];
+};
 
 function Index() {
   const [character, setCharacter] = useState<CharKey>("jair");
@@ -207,6 +233,9 @@ function Index() {
     oracoes: false,
     guia: false,
   });
+  const [downsellOffered, setDownsellOffered] = useState(false);
+  const [showDownsell, setShowDownsell] = useState(false);
+  const [isDownsellActive, setIsDownsellActive] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const callGenerate = useServerFn(generatePhoto);
 
@@ -223,10 +252,16 @@ function Index() {
 
   const total = useMemo(() => {
     let t = promoPrice;
+    if (CHARACTERS[character].isPremium) {
+      t = 9.90;
+    }
+    if (isDownsellActive) {
+      t = CHARACTERS[character].isPremium ? 4.90 : 3.90;
+    }
     if (bumps.oracoes) t += 3.99;
     if (bumps.guia) t += 14.9;
     return t;
-  }, [bumps, promoPrice]);
+  }, [bumps, promoPrice, character, isDownsellActive]);
 
   const handleFile = useCallback(
     async (file: File) => {
@@ -289,7 +324,25 @@ function Index() {
     setTipIndex(0);
     setHasDownloaded(false);
     setPromoPrice(6.22);
+    setDownsellOffered(false);
+    setShowDownsell(false);
+    setIsDownsellActive(false);
   };
+
+  const handlePaymentClose = useCallback(() => {
+    setShowPayment(false);
+    if (!downsellOffered && !isDownsellActive) {
+      setDownsellOffered(true);
+      setShowDownsell(true);
+    }
+  }, [downsellOffered, isDownsellActive]);
+
+  const handleDownsellAccept = useCallback(() => {
+    setShowDownsell(false);
+    setIsDownsellActive(true);
+    setShowPayment(true);
+    toast.success("Desconto patriota de resgate ativado! 🇧🇷");
+  }, []);
 
   const handlePaid = useCallback(() => {
     setShowPayment(false);
@@ -553,10 +606,10 @@ function Index() {
                 <div className="space-y-3">
                   <button
                     onClick={() => setShowPayment(true)}
-                    className="w-full bg-[oklch(0.52_0.16_145)] hover:bg-[oklch(0.45_0.16_145)] text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition shadow-lg shadow-[oklch(0.52_0.16_145)]/30"
+                    className="w-full bg-gradient-to-r from-emerald-600 via-emerald-500 to-emerald-600 hover:brightness-105 active:scale-[0.99] text-white font-extrabold py-4 rounded-xl flex items-center justify-center gap-2 transition-all duration-300 shadow-[0_10px_25px_rgba(16,185,129,0.35)] animate-pulse-slow cursor-pointer"
                   >
-                    <Lock className="w-5 h-5" />
-                    Liberar minha foto
+                    <Lock className="w-5 h-5 animate-bounce-slow" />
+                    LIBERAR MINHA FOTO AGORA ⚡
                   </button>
                   <button
                     onClick={reset}
@@ -805,8 +858,8 @@ function Index() {
 
       {/* SOCIAL PROOF FLOAT POPUP */}
       {proof && (
-        <div className="fixed bottom-24 md:bottom-6 left-4 z-50 max-w-xs bg-card/95 border border-border backdrop-blur-md p-3.5 rounded-2xl shadow-xl flex items-center gap-3 animate-in slide-in-from-left-5 duration-300">
-          <div className="w-8 h-8 rounded-full bg-[oklch(0.88_0.19_95)] flex items-center justify-center text-sm font-bold text-[oklch(0.18_0.04_145)] flex-shrink-0">
+        <div className="fixed top-20 left-4 z-50 max-w-xs bg-card/95 border border-border backdrop-blur-md p-3.5 rounded-2xl shadow-xl flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-500">
+          <div className="w-8 h-8 rounded-full bg-[oklch(0.88_0.19_95)] flex items-center justify-center text-sm font-bold text-[oklch(0.18_0.04_145)] flex-shrink-0 animate-pulse">
             🇧🇷
           </div>
           <div className="text-[11px] leading-tight">
@@ -824,9 +877,9 @@ function Index() {
           {step === "idle" && (
             <button
               onClick={() => fileRef.current?.click()}
-              className="w-full bg-[oklch(0.52_0.16_145)] hover:bg-[oklch(0.45_0.16_145)] text-white font-bold py-4 rounded-xl flex items-center justify-center gap-3 transition shadow-lg shadow-[oklch(0.52_0.16_145)]/20"
+              className="w-full bg-gradient-to-r from-emerald-600 via-emerald-500 to-emerald-600 text-white font-extrabold py-4 rounded-xl flex items-center justify-center gap-3 transition-all duration-300 shadow-[0_10px_25px_rgba(16,185,129,0.35)] animate-pulse-slow cursor-pointer"
             >
-              <Upload className="w-5 h-5 animate-bounce" />
+              <Upload className="w-5 h-5 animate-bounce-slow" />
               Enviar minha foto agora
             </button>
           )}
@@ -834,9 +887,9 @@ function Index() {
             <div className="w-full flex gap-2">
               <button
                 onClick={() => setShowPayment(true)}
-                className="flex-1 bg-[oklch(0.52_0.16_145)] hover:bg-[oklch(0.45_0.16_145)] text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition shadow-lg shadow-[oklch(0.52_0.16_145)]/20"
+                className="flex-1 bg-gradient-to-r from-emerald-600 via-emerald-500 to-emerald-600 text-white font-extrabold py-4 rounded-xl flex items-center justify-center gap-2 transition-all duration-300 shadow-[0_10px_25px_rgba(16,185,129,0.35)] animate-pulse-slow cursor-pointer"
               >
-                <Lock className="w-5 h-5" />
+                <Lock className="w-5 h-5 animate-bounce-slow" />
                 Liberar minha foto
               </button>
               <button
@@ -878,9 +931,17 @@ function Index() {
           bumps={bumps}
           setBumps={setBumps}
           total={total}
-          onClose={() => setShowPayment(false)}
+          onClose={handlePaymentClose}
           onPaid={handlePaid}
           generatedUrl={generatedUrl}
+        />
+      )}
+      {showDownsell && (
+        <DownsellModal
+          character={c.name}
+          price={CHARACTERS[character].isPremium ? 4.90 : 3.90}
+          onClose={() => setShowDownsell(false)}
+          onAccept={handleDownsellAccept}
         />
       )}
       {activeUpsell === "darkhorse" && (
@@ -929,17 +990,23 @@ function CharacterSwitcher({
       <div className="inline-flex items-center gap-0.5 sm:gap-1 p-1 rounded-full bg-card border border-border shadow-sm max-w-full overflow-x-auto no-scrollbar">
         {(Object.keys(CHARACTERS) as CharKey[]).map((key) => {
           const active = value === key;
+          const isPrem = CHARACTERS[key].isPremium;
           return (
             <button
               key={key}
               onClick={() => onChange(key)}
-              className={`px-2.5 sm:px-4 md:px-5 py-1.5 md:py-2 rounded-full text-xs sm:text-sm font-semibold transition flex-shrink-0 ${
+              className={`px-2.5 sm:px-4 md:px-5 py-1.5 md:py-2 rounded-full text-xs sm:text-sm font-semibold transition flex-shrink-0 relative ${
                 active
                   ? "bg-[oklch(0.18_0.04_145)] text-[oklch(0.985_0.012_95)] shadow-sm"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
               {CHARACTERS[key].short}
+              {isPrem && (
+                <span className="absolute -top-2.5 -right-1 bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 text-amber-950 font-black text-[7px] px-1.5 py-0.5 rounded-full uppercase scale-90 border border-amber-300 shadow-[0_2px_5px_rgba(245,158,11,0.2)] animate-pulse-slow">
+                  PREMIUM ⚡
+                </span>
+              )}
             </button>
           );
         })}
@@ -1539,56 +1606,72 @@ function UpsellModal({
   const [copied, setCopied] = useState(false);
   const [pixTab, setPixTab] = useState<"mobile" | "computer">("mobile");
   const [checking, setChecking] = useState(false);
+  const [isDownsell, setIsDownsell] = useState(false);
 
   const content = useMemo(() => {
+    const price = isDownsell ? "9,90" : "27,00";
     if (type === "darkhorse") {
       return {
         titleOffer: (
           <>
+            {isDownsell ? (
+              <span className="text-yellow-400 font-extrabold block text-xs uppercase tracking-widest mb-1.5 animate-pulse">
+                ⚠️ ÚLTIMA CHANCE: 63% DE DESCONTO PATRIOTA
+              </span>
+            ) : null}
             Acesso na ÍNTEGRA ao filme
             <br />
             <span className="text-[oklch(0.88_0.19_95)]">DARK HORSE</span> completo
           </>
         ),
-        titlePix: "Pague com Pix (Dark Horse)",
-        desc: "O documentário que a grande mídia não quis que você visse. Filme completo, sem cortes, em alta definição. Acesso vitalício imediato.",
+        titlePix: `Pague com Pix (Dark Horse - R$ ${price})`,
+        desc: isDownsell
+          ? "Não queremos que o preço seja um obstáculo para você ver a verdade. Liberamos o documentário censurado completo por apenas R$ 9,90. Acesso vitalício imediato!"
+          : "O documentário que a grande mídia não quis que você visse. Filme completo, sem cortes, em alta definição. Acesso vitalício imediato.",
         features: [
           "Filme completo em alta definição (HD)",
           "Conteúdo exclusivo: entrevistas censuradas",
           "Acesso vitalício, assista quando e onde quiser",
         ],
-        btnLabel: "SIM, QUERO O DARK HORSE!",
+        btnLabel: isDownsell ? "SIM, QUERO O FILME POR R$ 9,90! ⚡" : "SIM, QUERO O DARK HORSE!",
         btnLoadingLabel: "Gerando Pix do Dark Horse...",
-        simulatedLabel: "⚡ Simular Pagamento Aprovado (R$ 27)",
         toastSuccess: "Pagamento do Dark Horse aprovado! Seu acesso foi liberado.",
         downloadFile: "/downloads/dark-horse.pdf",
         downloadName: "dark-horse.pdf",
+        priceValue: isDownsell ? 9.90 : 27.00,
       };
     } else {
       return {
         titleOffer: (
           <>
+            {isDownsell ? (
+              <span className="text-yellow-400 font-extrabold block text-xs uppercase tracking-widest mb-1.5 animate-pulse">
+                ⚠️ ÚLTIMA CHANCE: 63% DE DESCONTO PATRIOTA
+              </span>
+            ) : null}
             Grupo Exclusivo
             <br />
             <span className="text-[oklch(0.88_0.19_95)]">FAMÍLIA BOLSONARO</span> VIP
           </>
         ),
-        titlePix: "Pague com Pix (Grupo VIP)",
-        desc: "Participe da comunidade VIP secreta de WhatsApp e Telegram com os bastidores dos maiores líderes conservadores e patriotas do Brasil.",
+        titlePix: `Pague com Pix (Grupo VIP - R$ ${price})`,
+        desc: isDownsell
+          ? "Queremos todos os patriotas unidos! Liberamos sua entrada na nossa comunidade VIP secreta por apenas R$ 9,90. Entre agora!"
+          : "Participe da comunidade VIP secreta de WhatsApp e Telegram com os bastidores dos maiores líderes conservadores e patriotas do Brasil.",
         features: [
           "Notícias e bastidores exclusivos direto da fonte",
           "Grupo VIP com outros patriotas influentes",
           "Lives secretas e debates sem censura toda semana",
         ],
-        btnLabel: "QUERO ENTRAR NO GRUPO VIP!",
+        btnLabel: isDownsell ? "QUERO ENTRAR NO GRUPO POR R$ 9,90! ⚡" : "QUERO ENTRAR NO GRUPO VIP!",
         btnLoadingLabel: "Gerando Pix do Grupo VIP...",
-        simulatedLabel: "⚡ Simular Entrada no Grupo VIP (R$ 27)",
         toastSuccess: "Inscrição aprovada! Bem-vindo à Família VIP.",
         downloadFile: "https://t.me/GrupoExclusivoFamiliaBolsonaro",
         downloadName: "grupo_VIP.html",
+        priceValue: isDownsell ? 9.90 : 27.00,
       };
     }
-  }, [type]);
+  }, [type, isDownsell]);
 
   useEffect(() => {
     if (phase !== "pix" || timeLeft <= 0) return;
@@ -1609,11 +1692,11 @@ function UpsellModal({
     if (phase !== "pix" || !pix) return;
     const fireConversion = () => {
       if (typeof window !== "undefined" && window.fbq) {
-        window.fbq("track", "Purchase", { value: 27.0, currency: "BRL" });
+        window.fbq("track", "Purchase", { value: content.priceValue, currency: "BRL" });
       }
       if (typeof window !== "undefined" && window.ttq) {
-        window.ttq.track("CompletePayment", { value: 27.0, currency: "BRL" });
-        window.ttq.track("Purchase", { value: 27.0, currency: "BRL" });
+        window.ttq.track("CompletePayment", { value: content.priceValue, currency: "BRL" });
+        window.ttq.track("Purchase", { value: content.priceValue, currency: "BRL" });
       }
     };
     let active = true;
@@ -1651,7 +1734,7 @@ function UpsellModal({
     try {
       const res = await callCreate({
         data: {
-          amount: 27.0,
+          amount: content.priceValue,
           character: characterKey,
           bumps: { oracoes: false, guia: false },
         },
@@ -1659,17 +1742,29 @@ function UpsellModal({
       setPix(res);
       setPhase("pix");
       if (typeof window !== "undefined" && window.fbq) {
-        window.fbq("track", "AddToCart", { value: 27.0, currency: "BRL" });
-        window.fbq("track", "InitiateCheckout", { value: 27.0, currency: "BRL" });
+        window.fbq("track", "AddToCart", { value: content.priceValue, currency: "BRL" });
+        window.fbq("track", "InitiateCheckout", { value: content.priceValue, currency: "BRL" });
       }
       if (typeof window !== "undefined" && window.ttq) {
-        window.ttq.track("AddToCart", { value: 27.0, currency: "BRL" });
-        window.ttq.track("InitiateCheckout", { value: 27.0, currency: "BRL" });
+        window.ttq.track("AddToCart", { value: content.priceValue, currency: "BRL" });
+        window.ttq.track("InitiateCheckout", { value: content.priceValue, currency: "BRL" });
       }
     } catch (e: any) {
       toast.error(e?.message ?? `Falha ao gerar o Pix: ${content.btnLoadingLabel}`);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDecline = () => {
+    if (!isDownsell) {
+      setIsDownsell(true);
+      setPhase("offer");
+      setPix(null);
+      setCopied(false);
+      toast.info("Aguarde! Liberamos uma oferta de resgate especial para você! 🇧🇷");
+    } else {
+      onClose(false);
     }
   };
 
@@ -1680,11 +1775,11 @@ function UpsellModal({
       const res = await callStatus({ data: { externalId: pix.externalId } });
       if (res.status === "paid") {
         if (typeof window !== "undefined" && window.fbq) {
-          window.fbq("track", "Purchase", { value: 27.0, currency: "BRL" });
+          window.fbq("track", "Purchase", { value: content.priceValue, currency: "BRL" });
         }
         if (typeof window !== "undefined" && window.ttq) {
-          window.ttq.track("CompletePayment", { value: 27.0, currency: "BRL" });
-          window.ttq.track("Purchase", { value: 27.0, currency: "BRL" });
+          window.ttq.track("CompletePayment", { value: content.priceValue, currency: "BRL" });
+          window.ttq.track("Purchase", { value: content.priceValue, currency: "BRL" });
         }
         toast.success(content.toastSuccess);
         if (type === "darkhorse") {
@@ -1723,7 +1818,7 @@ function UpsellModal({
       <div className="bg-background rounded-2xl max-w-lg w-full my-8 shadow-2xl border-2 border-[oklch(0.88_0.19_95)] overflow-hidden flex flex-col max-h-[90vh]">
         <div className="bg-gradient-to-br from-[oklch(0.28_0.13_265)] to-[oklch(0.18_0.04_145)] text-white px-6 py-8 text-center relative flex-shrink-0 sticky top-0 z-50">
           <button
-            onClick={() => onClose(false)}
+            onClick={handleDecline}
             className="absolute top-4 right-4 opacity-70 hover:opacity-100 cursor-pointer p-1.5 rounded-full hover:bg-white/10 transition"
           >
             <X className="w-6 h-6" />
@@ -1757,7 +1852,7 @@ function UpsellModal({
                   De R$ 97,00
                 </div>
                 <div className="font-display text-4xl text-[oklch(0.52_0.16_145)] font-bold">
-                  R$ 27,00
+                  R$ {isDownsell ? "9,90" : "27,00"}
                 </div>
                 <div className="text-xs text-muted-foreground font-medium">
                   à vista, hoje apenas
@@ -1767,21 +1862,21 @@ function UpsellModal({
               <button
                 onClick={handleBuy}
                 disabled={loading}
-                className="w-full bg-[oklch(0.88_0.19_95)] hover:bg-[oklch(0.82_0.19_95)] text-[oklch(0.18_0.04_145)] font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition cursor-pointer shadow-lg shadow-[oklch(0.88_0.19_95)]/20 active:scale-98"
+                className="w-full bg-gradient-to-r from-yellow-500 via-amber-400 to-yellow-500 hover:brightness-105 active:scale-[0.99] text-amber-950 font-black py-4 rounded-xl flex items-center justify-center gap-2 transition-all duration-300 shadow-[0_10px_25px_rgba(245,158,11,0.3)] animate-pulse-slow cursor-pointer text-sm"
               >
                 {loading ? (
                   <Loader2 className="w-5 h-5 animate-spin" />
                 ) : (
-                  <Sparkles className="w-5 h-5" />
+                  <Sparkles className="w-5 h-5 animate-bounce-slow" />
                 )}
                 {loading ? content.btnLoadingLabel : content.btnLabel}
               </button>
 
               <button
-                onClick={() => onClose(false)}
+                onClick={handleDecline}
                 className="w-full text-xs text-muted-foreground hover:text-foreground py-2 font-medium cursor-pointer"
               >
-                Não, obrigado. Recusar oferta e ir para minha foto.
+                Não, obrigado. Recusar e prosseguir.
               </button>
             </div>
           )}
@@ -1791,7 +1886,7 @@ function UpsellModal({
               <div className="text-center">
                 <div className="text-sm text-muted-foreground font-semibold">Valor da Oferta</div>
                 <div className="font-display text-3xl text-[oklch(0.52_0.16_145)] font-bold">
-                  R$ 27,00
+                  R$ {isDownsell ? "9,90" : "27,00"}
                 </div>
               </div>
 
@@ -2420,6 +2515,66 @@ function DevDashboardModal({ onClose, onLogout }: { onClose: () => void; onLogou
             className="text-red-400 hover:text-red-300 font-bold transition hover:underline bg-slate-800/50 hover:bg-red-950/20 border border-red-900/30 px-3 py-1 rounded-lg text-[10px] cursor-pointer"
           >
             🔴 Sair do Painel Admin
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DownsellModal({
+  character,
+  price,
+  onClose,
+  onAccept,
+}: {
+  character: string;
+  price: number;
+  onClose: () => void;
+  onAccept: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+      <div className="bg-background rounded-3xl max-w-md w-full my-8 shadow-[0_20px_50px_rgba(254,223,0,0.25)] border-2 border-yellow-400 overflow-hidden flex flex-col animate-in scale-in duration-300">
+        <div className="bg-gradient-to-br from-emerald-700 via-emerald-600 to-green-700 text-white px-6 py-7 text-center relative">
+          <div className="inline-flex items-center gap-1.5 bg-yellow-400 text-emerald-950 text-[10px] font-extrabold uppercase px-3 py-1 rounded-full tracking-wider mb-2 animate-bounce">
+            🇧🇷 DESCONTO PATRIOTA DE RESGATE
+          </div>
+          <h2 className="font-display text-2xl md:text-3xl font-black leading-tight">
+            Não perca sua foto com {character}!
+          </h2>
+        </div>
+
+        <div className="p-6 space-y-5 text-center">
+          <p className="text-xs text-muted-foreground leading-relaxed font-semibold">
+            Sabemos que você quer guardar essa recordação histórica. Para garantir que o preço não seja um impedimento, liberamos um super desconto patriota de resgate especial para você!
+          </p>
+
+          <div className="bg-emerald-500/5 rounded-2xl p-4 border border-emerald-500/10 flex flex-col items-center">
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold leading-none mb-1">
+              De R$ 19,90 por apenas:
+            </span>
+            <span className="font-display text-5xl text-[oklch(0.52_0.16_145)] font-black animate-pulse">
+              R$ {price.toFixed(2).replace(".", ",")}
+            </span>
+            <span className="text-[10px] text-muted-foreground font-semibold mt-1">
+              Liberação HD imediata & Sem marca d'água
+            </span>
+          </div>
+
+          <button
+            onClick={onAccept}
+            className="w-full bg-gradient-to-r from-emerald-600 via-emerald-500 to-emerald-600 hover:brightness-105 active:scale-[0.99] text-white font-black py-4 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-500/30 animate-pulse-slow cursor-pointer text-sm"
+          >
+            <Sparkles className="w-4 h-4 animate-bounce-slow" />
+            SIM, ACEITO O DESCONTO DE RESGATE!
+          </button>
+
+          <button
+            onClick={onClose}
+            className="text-xs text-muted-foreground hover:text-foreground font-semibold underline cursor-pointer"
+          >
+            Não, quero perder minha foto para sempre
           </button>
         </div>
       </div>
