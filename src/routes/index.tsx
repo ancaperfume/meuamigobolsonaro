@@ -1020,6 +1020,7 @@ function PaymentModal({
   const [timeLeft, setTimeLeft] = useState(600); // 10 minutes
   const [copied, setCopied] = useState(false);
   const [pixTab, setPixTab] = useState<"mobile" | "computer">("mobile");
+  const [checking, setChecking] = useState(false);
 
   useEffect(() => {
     if (phase !== "pix" || timeLeft <= 0) return;
@@ -1084,9 +1085,22 @@ function PaymentModal({
     }
   };
 
-  const confirmPayment = useCallback(() => {
-    onPaid();
-  }, [onPaid]);
+  const confirmPayment = useCallback(async () => {
+    if (!pix) return;
+    setChecking(true);
+    try {
+      const res = await callStatus({ data: { externalId: pix.externalId } });
+      if (res.status === "paid") {
+        onPaid();
+      } else {
+        toast.error("Pagamento ainda não detectado. Se você já pagou, aguarde alguns instantes para a compensação e tente novamente.");
+      }
+    } catch (e) {
+      toast.error("Erro ao verificar o pagamento. Tente novamente em instantes.");
+    } finally {
+      setChecking(false);
+    }
+  }, [pix, callStatus, onPaid]);
 
   const copy = async (txt: string) => {
     try {
@@ -1434,9 +1448,15 @@ function PaymentModal({
 
               <button
                 onClick={confirmPayment}
-                className="w-full py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-lg transition active:scale-98 flex items-center justify-center gap-2"
+                disabled={checking}
+                className="w-full py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white font-bold text-sm shadow-lg transition active:scale-98 flex items-center justify-center gap-2 cursor-pointer"
               >
-                ✅ JÁ PAGUEI — Liberar minha foto
+                {checking ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  "✅"
+                )}
+                {checking ? "Verificando..." : "JÁ PAGUEI — Liberar minha foto"}
               </button>
 
               <div className="text-[10px] text-center text-muted-foreground font-medium">
@@ -1518,6 +1538,7 @@ function UpsellModal({
   const [timeLeft, setTimeLeft] = useState(600); // 10 minutes
   const [copied, setCopied] = useState(false);
   const [pixTab, setPixTab] = useState<"mobile" | "computer">("mobile");
+  const [checking, setChecking] = useState(false);
 
   const content = useMemo(() => {
     if (type === "darkhorse") {
@@ -1652,27 +1673,40 @@ function UpsellModal({
     }
   };
 
-  const confirmUpsellPayment = useCallback(() => {
-    if (typeof window !== "undefined" && window.fbq) {
-      window.fbq("track", "Purchase", { value: 27.0, currency: "BRL" });
+  const confirmUpsellPayment = useCallback(async () => {
+    if (!pix) return;
+    setChecking(true);
+    try {
+      const res = await callStatus({ data: { externalId: pix.externalId } });
+      if (res.status === "paid") {
+        if (typeof window !== "undefined" && window.fbq) {
+          window.fbq("track", "Purchase", { value: 27.0, currency: "BRL" });
+        }
+        if (typeof window !== "undefined" && window.ttq) {
+          window.ttq.track("CompletePayment", { value: 27.0, currency: "BRL" });
+          window.ttq.track("Purchase", { value: 27.0, currency: "BRL" });
+        }
+        toast.success(content.toastSuccess);
+        if (type === "darkhorse") {
+          const link = document.createElement("a");
+          link.href = content.downloadFile;
+          link.download = content.downloadName;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        } else {
+          window.open(content.downloadFile, "_blank");
+        }
+        onClose(true);
+      } else {
+        toast.error("Pagamento ainda não detectado. Se você já pagou, aguarde alguns instantes para a compensação e tente novamente.");
+      }
+    } catch (e) {
+      toast.error("Erro ao verificar o pagamento. Tente novamente em instantes.");
+    } finally {
+      setChecking(false);
     }
-    if (typeof window !== "undefined" && window.ttq) {
-      window.ttq.track("CompletePayment", { value: 27.0, currency: "BRL" });
-      window.ttq.track("Purchase", { value: 27.0, currency: "BRL" });
-    }
-    toast.success(content.toastSuccess);
-    if (type === "darkhorse") {
-      const link = document.createElement("a");
-      link.href = content.downloadFile;
-      link.download = content.downloadName;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } else {
-      window.open(content.downloadFile, "_blank");
-    }
-    onClose(true);
-  }, [content, type, onClose]);
+  }, [pix, callStatus, content, type, onClose]);
 
   const copy = async (txt: string) => {
     try {
@@ -1871,9 +1905,15 @@ function UpsellModal({
 
               <button
                 onClick={confirmUpsellPayment}
-                className="w-full py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-lg transition active:scale-98 flex items-center justify-center gap-2"
+                disabled={checking}
+                className="w-full py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white font-bold text-sm shadow-lg transition active:scale-98 flex items-center justify-center gap-2 cursor-pointer"
               >
-                ✅ JÁ PAGUEI — Liberar meu conteúdo
+                {checking ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  "✅"
+                )}
+                {checking ? "Verificando..." : "JÁ PAGUEI — Liberar meu conteúdo"}
               </button>
 
               <div className="text-[10px] text-center text-muted-foreground font-medium">
