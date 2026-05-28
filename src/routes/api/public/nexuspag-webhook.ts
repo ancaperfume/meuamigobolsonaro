@@ -83,7 +83,7 @@ export const Route = createFileRoute("/api/public/nexuspag-webhook")({
             console.log(`Webhook order ${externalId} status is pending/other: ${status}`);
           }
         } else {
-          console.warn("Could not extract external_id or status from webhook payload", jsonBody => JSON.stringify(payload));
+          console.warn("Could not extract external_id or status from webhook payload", JSON.stringify(payload));
         }
 
         return new Response("ok", { status: 200 });

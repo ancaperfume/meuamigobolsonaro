@@ -455,6 +455,26 @@ function Index() {
     <div className="min-h-screen bg-background bg-parchment">
       <Toaster richColors position="top-center" />
 
+      {/* Botão Flutuante do WhatsApp na Esquerda */}
+      <a
+        href="https://wa.me/message/WBDHPEF33R4RA1"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="fixed bottom-6 left-6 z-50 bg-[#25D366] hover:bg-[#20BA56] text-white p-3.5 rounded-full shadow-[0_4px_15px_rgba(37,211,102,0.4)] transition-all duration-300 hover:scale-110 active:scale-95 flex items-center justify-center group"
+        aria-label="Chamar no WhatsApp"
+      >
+        <svg
+          className="w-6 h-6 fill-current"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.662c1.746.953 3.71 1.455 5.703 1.458h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+        </svg>
+        <span className="max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-500 ease-in-out whitespace-nowrap text-xs font-bold font-sans ml-0 group-hover:ml-2">
+          Suporte WhatsApp
+        </span>
+      </a>
+
       {/* TOP RIBBON */}
       <div className="w-full bg-[oklch(0.52_0.16_145)] text-[oklch(0.985_0.012_95)] text-xs tracking-[0.18em] uppercase py-2 text-center font-medium">
         🇧🇷 Ordem e Progresso · Pagamento 100% seguro · Entrega imediata 🚀
@@ -2706,6 +2726,54 @@ function DownsellModal({
   onClose: () => void;
   onAccept: () => void;
 }) {
+  const [showSupportRescue, setShowSupportRescue] = useState(false);
+
+  if (showSupportRescue) {
+    return (
+      <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+        <div className="bg-background rounded-3xl max-w-md w-full my-8 shadow-[0_20px_50px_rgba(37,211,102,0.3)] border-2 border-[#25D366] overflow-hidden flex flex-col animate-in scale-in duration-300">
+          <div className="bg-gradient-to-br from-emerald-800 via-emerald-700 to-emerald-800 text-white px-6 py-7 text-center relative">
+            <div className="inline-flex items-center gap-1.5 bg-[#25D366] text-white text-[10px] font-extrabold uppercase px-3 py-1 rounded-full tracking-wider mb-2 animate-bounce">
+              🟢 SUPORTE WHATSAPP ATIVO
+            </div>
+            <h2 className="font-display text-2xl md:text-3xl font-black leading-tight">
+              Ficou com alguma dúvida ou teve problemas?
+            </h2>
+          </div>
+
+          <div className="p-6 space-y-5 text-center">
+            <p className="text-xs text-muted-foreground leading-relaxed font-semibold">
+              Se você teve algum problema com o pagamento, não conseguiu gerar sua foto ou prefere pagar de outra forma, nosso suporte humanizado no WhatsApp está online agora mesmo para te ajudar a resolver!
+            </p>
+
+            <a
+              href="https://wa.me/message/WBDHPEF33R4RA1"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full bg-[#25D366] hover:bg-[#20BA56] active:scale-[0.99] text-white font-black py-4 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-[#25D366]/30 cursor-pointer text-sm font-sans"
+            >
+              <svg
+                className="w-5 h-5 fill-current"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.662c1.746.953 3.71 1.455 5.703 1.458h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+              </svg>
+              🟢 CHAMAR SUPORTE NO WHATSAPP
+            </a>
+
+            <button
+              onClick={onClose}
+              className="text-xs text-muted-foreground hover:text-foreground font-semibold underline cursor-pointer"
+            >
+              Ignorar e sair mesmo assim
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
       <div className="bg-background rounded-3xl max-w-md w-full my-8 shadow-[0_20px_50px_rgba(254,223,0,0.25)] border-2 border-yellow-400 overflow-hidden flex flex-col animate-in scale-in duration-300">
@@ -2744,7 +2812,7 @@ function DownsellModal({
           </button>
 
           <button
-            onClick={onClose}
+            onClick={() => setShowSupportRescue(true)}
             className="text-xs text-muted-foreground hover:text-foreground font-semibold underline cursor-pointer"
           >
             Não, quero perder minha foto para sempre
@@ -2762,6 +2830,54 @@ function LideresDownsellModal({
   onClose: () => void;
   onAccept: () => void;
 }) {
+  const [showSupportRescue, setShowSupportRescue] = useState(false);
+
+  if (showSupportRescue) {
+    return (
+      <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+        <div className="bg-background rounded-3xl max-w-md w-full my-8 shadow-[0_20px_50px_rgba(37,211,102,0.3)] border-2 border-[#25D366] overflow-hidden flex flex-col animate-in scale-in duration-300">
+          <div className="bg-gradient-to-br from-emerald-800 via-emerald-700 to-emerald-800 text-white px-6 py-7 text-center relative">
+            <div className="inline-flex items-center gap-1.5 bg-[#25D366] text-white text-[10px] font-extrabold uppercase px-3 py-1 rounded-full tracking-wider mb-2 animate-bounce">
+              🟢 SUPORTE WHATSAPP ATIVO
+            </div>
+            <h2 className="font-display text-2xl md:text-3xl font-black leading-tight">
+              Ficou com alguma dúvida ou teve problemas?
+            </h2>
+          </div>
+
+          <div className="p-6 space-y-5 text-center">
+            <p className="text-xs text-muted-foreground leading-relaxed font-semibold">
+              Se você teve algum problema com o pagamento do seu pacote VIP, ou gostaria de tirar alguma dúvida, nosso suporte humanizado no WhatsApp está online agora mesmo para te ajudar!
+            </p>
+
+            <a
+              href="https://wa.me/message/WBDHPEF33R4RA1"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full bg-[#25D366] hover:bg-[#20BA56] active:scale-[0.99] text-white font-black py-4 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-[#25D366]/30 cursor-pointer text-sm font-sans"
+            >
+              <svg
+                className="w-5 h-5 fill-current"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.662c1.746.953 3.71 1.455 5.703 1.458h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+              </svg>
+              🟢 CHAMAR SUPORTE NO WHATSAPP
+            </a>
+
+            <button
+              onClick={onClose}
+              className="text-xs text-muted-foreground hover:text-foreground font-semibold underline cursor-pointer"
+            >
+              Ignorar e sair mesmo assim
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
       <div className="bg-background rounded-3xl max-w-md w-full my-8 shadow-[0_20px_50px_rgba(254,223,0,0.25)] border-2 border-yellow-400 overflow-hidden flex flex-col animate-in scale-in duration-300">
@@ -2800,7 +2916,7 @@ function LideresDownsellModal({
           </button>
 
           <button
-            onClick={onClose}
+            onClick={() => setShowSupportRescue(true)}
             className="text-xs text-muted-foreground hover:text-foreground font-semibold underline cursor-pointer"
           >
             Não, obrigado. Recusar e prosseguir
