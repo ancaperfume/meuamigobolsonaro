@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
 import {
   saveGenerationToLog,
@@ -34,7 +35,8 @@ function getClientIP(request: Request): string {
 
 export const generatePhoto = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => inputSchema.parse(data))
-  .handler(async ({ data, request }) => {
+  .handler(async ({ data }) => {
+    const request = getRequest();
     const ip = getClientIP(request);
 
     // Obfuscated OpenRouter key to prevent GitHub secret scanner block
@@ -90,6 +92,10 @@ SCENE COMPOSITION & STYLE:
             ],
           },
         ],
+        provider: {
+          order: ["Google AI Studio"],
+          allow_fallbacks: false
+        }
       }),
     });
 
@@ -153,7 +159,7 @@ export const testSupabaseConnection = createServerFn({ method: "GET" }).handler(
 
   // Test 2: try to query generations table
   try {
-    const { default: logging } = await import("@/lib/logging.server");
+    await import("@/lib/logging.server");
     const { data, error } = await (
       await import("@/integrations/supabase/client.server")
     ).supabaseAdmin
@@ -195,13 +201,15 @@ export const testSupabaseConnection = createServerFn({ method: "GET" }).handler(
 
 export const saveTestGenerationLog = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => testLogSchema.parse(data))
-  .handler(async ({ data, request }) => {
+  .handler(async ({ data }) => {
+    const request = getRequest();
     const ip = getClientIP(request);
     await saveGenerationToLog(data.url, data.character, ip, data.status ?? "generated");
     return { success: true };
   });
 
-export const getUserPhotos = createServerFn({ method: "GET" }).handler(async ({ request }) => {
+export const getUserPhotos = createServerFn({ method: "GET" }).handler(async () => {
+  const request = getRequest();
   const ip = getClientIP(request);
   const photos = await getUserPhotosByIP(ip);
   return { photos, ip };
