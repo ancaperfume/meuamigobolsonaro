@@ -95,11 +95,11 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='420' height='200' viewBox='0 0 420 200'><g transform='rotate(-22 210 100)' opacity='0.62'><text x='210' y='85' text-anchor='middle' font-family='Georgia, serif' font-size='34' font-weight='900' fill='%23046a38' letter-spacing='1'>bolsonaro meu amigo</text><g transform='translate(210 115)'><rect x='-24' y='-14' width='48' height='30' fill='%23046a38'/><polygon points='0,-12 22,2 0,16 -22,2' fill='%23fedf00'/><circle cx='0' cy='2' r='6' fill='%23002776'/></g></g></svg>");
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='420' height='200' viewBox='0 0 420 200'><g transform='rotate(-22 210 100)' opacity='0.88'><text x='210' y='85' text-anchor='middle' font-family='Georgia, serif' font-size='34' font-weight='900' fill='%23046a38' letter-spacing='1'>bolsonaro meu amigo</text><g transform='translate(210 115)'><rect x='-24' y='-14' width='48' height='30' fill='%23046a38'/><polygon points='0,-12 22,2 0,16 -22,2' fill='%23fedf00'/><circle cx='0' cy='2' r='6' fill='%23002776'/></g></g></svg>");
   background-repeat: repeat;
   background-size: 420px 200px;
   mix-blend-mode: multiply;
-  opacity: 0.82;
+  opacity: 0.95;
   user-select: none;
   -webkit-user-drag: none;
 }
