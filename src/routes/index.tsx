@@ -241,14 +241,18 @@ function Index() {
   const [lideresDownsellOffered, setLideresDownsellOffered] = useState(false);
   const [showLideresDownsellModal, setShowLideresDownsellModal] = useState(false);
   const [unlockedLideres, setUnlockedLideres] = useState(false);
+  const [hasPaidBefore, setHasPaidBefore] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const callGenerate = useServerFn(generatePhoto);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
       setUnlockedLideres(localStorage.getItem("unlocked_lideres_mundiais") === "true");
+      setHasPaidBefore(localStorage.getItem("has_paid_before") === "true");
     }
   }, []);
+
+  const isClient = hasPaidBefore || unlockedLideres;
 
   // Preload all character examples to make switching instant
   useEffect(() => {
@@ -397,6 +401,10 @@ function Index() {
     setShowPayment(false);
     setPaidBumps(bumps);
     setStep("paid");
+    if (typeof window !== "undefined") {
+      localStorage.setItem("has_paid_before", "true");
+      setHasPaidBefore(true);
+    }
     setTimeout(() => setActiveUpsell("darkhorse"), 600);
     toast.success("Pagamento aprovado! Seus itens foram liberados.");
     // Meta Pixel — Purchase event
@@ -476,6 +484,7 @@ function Index() {
             setCharacter(k);
             reset();
           }}
+          isClient={isClient}
         />
 
         {/* HERO */}
@@ -1128,9 +1137,11 @@ function Index() {
 function CharacterSwitcher({
   value,
   onChange,
+  isClient,
 }: {
   value: CharKey;
   onChange: (k: CharKey) => void;
+  isClient: boolean;
 }) {
   return (
     <div className="flex justify-center">
@@ -1138,20 +1149,32 @@ function CharacterSwitcher({
         {(Object.keys(CHARACTERS) as CharKey[]).map((key) => {
           const active = value === key;
           const isPrem = CHARACTERS[key].isPremium;
+          const isLocked = isPrem && !isClient;
           return (
             <button
               key={key}
-              onClick={() => onChange(key)}
+              onClick={() => {
+                if (isLocked) {
+                  toast.error("Disponível apenas para clientes! Crie uma foto com um personagem brasileiro primeiro para liberar Trump & Milei! 🇧🇷");
+                  return;
+                }
+                onChange(key);
+              }}
               className={`px-2.5 sm:px-4 md:px-5 py-1.5 md:py-2 rounded-full text-xs sm:text-sm font-semibold transition flex-shrink-0 relative ${
                 active
                   ? "bg-[oklch(0.18_0.04_145)] text-[oklch(0.985_0.012_95)] shadow-sm"
+                  : isLocked
+                  ? "text-muted-foreground/45 hover:text-muted-foreground/60 cursor-not-allowed"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              {CHARACTERS[key].short}
+              <span className="flex items-center gap-1">
+                {CHARACTERS[key].short}
+                {isLocked && <Lock className="w-3 h-3 text-amber-500/80" />}
+              </span>
               {isPrem && (
                 <span className="absolute -top-2.5 -right-1 bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 text-amber-950 font-black text-[7px] px-1.5 py-0.5 rounded-full uppercase scale-90 border border-amber-300 shadow-[0_2px_5px_rgba(245,158,11,0.2)] animate-pulse-slow">
-                  PREMIUM ⚡
+                  {isLocked ? "CLIENTE 🔒" : "PREMIUM ⚡"}
                 </span>
               )}
             </button>
