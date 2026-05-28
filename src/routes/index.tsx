@@ -407,6 +407,15 @@ function Index() {
     }
     setTimeout(() => setActiveUpsell("darkhorse"), 600);
     toast.success("Pagamento aprovado! Seus itens foram liberados.");
+    
+    // Surprise toast to notify about Trump & Milei unlock
+    setTimeout(() => {
+      toast.success("🇺🇸 🇦🇷 SURPRESA! Você acaba de liberar Donald Trump e Javier Milei na página inicial!", {
+        duration: 8000,
+        icon: "⚡",
+      });
+    }, 2500);
+
     // Meta Pixel — Purchase event
     if (typeof window !== "undefined" && window.fbq) {
       window.fbq("track", "Purchase", { value: total, currency: "BRL" });
@@ -1149,32 +1158,22 @@ function CharacterSwitcher({
         {(Object.keys(CHARACTERS) as CharKey[]).map((key) => {
           const active = value === key;
           const isPrem = CHARACTERS[key].isPremium;
-          const isLocked = isPrem && !isClient;
+          if (isPrem && !isClient) return null; // Oculta Trump & Milei completamente de não-clientes!
+          
           return (
             <button
               key={key}
-              onClick={() => {
-                if (isLocked) {
-                  toast.error("Disponível apenas para clientes! Crie uma foto com um personagem brasileiro primeiro para liberar Trump & Milei! 🇧🇷");
-                  return;
-                }
-                onChange(key);
-              }}
+              onClick={() => onChange(key)}
               className={`px-2.5 sm:px-4 md:px-5 py-1.5 md:py-2 rounded-full text-xs sm:text-sm font-semibold transition flex-shrink-0 relative ${
                 active
                   ? "bg-[oklch(0.18_0.04_145)] text-[oklch(0.985_0.012_95)] shadow-sm"
-                  : isLocked
-                  ? "text-muted-foreground/45 hover:text-muted-foreground/60 cursor-not-allowed"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              <span className="flex items-center gap-1">
-                {CHARACTERS[key].short}
-                {isLocked && <Lock className="w-3 h-3 text-amber-500/80" />}
-              </span>
+              {CHARACTERS[key].short}
               {isPrem && (
                 <span className="absolute -top-2.5 -right-1 bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 text-amber-950 font-black text-[7px] px-1.5 py-0.5 rounded-full uppercase scale-90 border border-amber-300 shadow-[0_2px_5px_rgba(245,158,11,0.2)] animate-pulse-slow">
-                  {isLocked ? "CLIENTE 🔒" : "PREMIUM ⚡"}
+                  PREMIUM ⚡
                 </span>
               )}
             </button>
