@@ -9,11 +9,17 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ZapRouteImport } from './routes/zap'
 import { Route as MyPhotosRouteImport } from './routes/my-photos'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiPublicNexuspagWebhookRouteImport } from './routes/api/public/nexuspag-webhook'
 
+const ZapRoute = ZapRouteImport.update({
+  id: '/zap',
+  path: '/zap',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MyPhotosRoute = MyPhotosRouteImport.update({
   id: '/my-photos',
   path: '/my-photos',
@@ -40,12 +46,14 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/my-photos': typeof MyPhotosRoute
+  '/zap': typeof ZapRoute
   '/api/public/nexuspag-webhook': typeof ApiPublicNexuspagWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/my-photos': typeof MyPhotosRoute
+  '/zap': typeof ZapRoute
   '/api/public/nexuspag-webhook': typeof ApiPublicNexuspagWebhookRoute
 }
 export interface FileRoutesById {
@@ -53,18 +61,25 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/my-photos': typeof MyPhotosRoute
+  '/zap': typeof ZapRoute
   '/api/public/nexuspag-webhook': typeof ApiPublicNexuspagWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/admin' | '/my-photos' | '/api/public/nexuspag-webhook'
+  fullPaths:
+    | '/'
+    | '/admin'
+    | '/my-photos'
+    | '/zap'
+    | '/api/public/nexuspag-webhook'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/admin' | '/my-photos' | '/api/public/nexuspag-webhook'
+  to: '/' | '/admin' | '/my-photos' | '/zap' | '/api/public/nexuspag-webhook'
   id:
     | '__root__'
     | '/'
     | '/admin'
     | '/my-photos'
+    | '/zap'
     | '/api/public/nexuspag-webhook'
   fileRoutesById: FileRoutesById
 }
@@ -72,11 +87,19 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
   MyPhotosRoute: typeof MyPhotosRoute
+  ZapRoute: typeof ZapRoute
   ApiPublicNexuspagWebhookRoute: typeof ApiPublicNexuspagWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/zap': {
+      id: '/zap'
+      path: '/zap'
+      fullPath: '/zap'
+      preLoaderRoute: typeof ZapRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/my-photos': {
       id: '/my-photos'
       path: '/my-photos'
@@ -112,6 +135,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
   MyPhotosRoute: MyPhotosRoute,
+  ZapRoute: ZapRoute,
   ApiPublicNexuspagWebhookRoute: ApiPublicNexuspagWebhookRoute,
 }
 export const routeTree = rootRouteImport
